@@ -1,156 +1,179 @@
 <template>
-  <div class="users">
-    <nav class="navbar">
-      <div class="navbar-brand">
-        <h1>MiloMCP Studio</h1>
+  <div>
+    <el-container class="users-layout">
+    <el-header class="users-header">
+      <div class="header-left">
+        <h1 class="brand-title">MiloMCP Studio</h1>
       </div>
-      <div class="navbar-nav">
-        <RouterLink to="/dashboard" class="nav-link">仪表板</RouterLink>
-        <RouterLink to="/tools" class="nav-link">工具管理</RouterLink>
-        <RouterLink to="/users" class="nav-link active">用户管理</RouterLink>
-        <RouterLink to="/settings" class="nav-link">设置</RouterLink>
-        <button @click="handleLogout" class="btn btn-sm btn-secondary">退出登录</button>
+      <div class="header-nav">
+        <el-menu mode="horizontal" :default-active="$route.name" router>
+          <el-menu-item index="Dashboard">仪表板</el-menu-item>
+          <el-menu-item index="Tools">工具管理</el-menu-item>
+          <el-menu-item index="Users">用户管理</el-menu-item>
+          <el-menu-item index="Settings">设置</el-menu-item>
+        </el-menu>
+        <el-button type="primary" @click="handleLogout" size="small">
+          <el-icon><SwitchButton /></el-icon>
+          退出登录
+        </el-button>
       </div>
-    </nav>
+    </el-header>
 
-    <main class="main-content">
-      <div class="container">
+    <el-main class="users-main">
         <div class="page-header">
-          <div class="header-content">
+          <div>
             <h2>用户管理</h2>
             <p>管理系统用户和权限设置</p>
           </div>
           <div class="header-actions">
-            <button @click="showCreateModal = true" class="btn btn-primary">
-              ➕ 添加用户
-            </button>
-            <button @click="refreshUsers" class="btn btn-secondary" :disabled="isLoading">
-              <span v-if="isLoading" class="loading"></span>
-              🔄 刷新
-            </button>
+            <el-button @click="showCreateModal = true" type="primary">
+              <el-icon><Plus /></el-icon>
+              添加用户
+            </el-button>
+            <el-button @click="refreshUsers" :loading="isLoading" type="default">
+              <el-icon><Refresh /></el-icon>
+              刷新
+            </el-button>
           </div>
         </div>
 
-        <div class="users-stats">
-          <div class="stat-card">
-            <div class="stat-icon">👥</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ users.length }}</div>
-              <div class="stat-label">总用户数</div>
-            </div>
-          </div>
-        </div>
+        <el-row :gutter="20" class="stats-row">
+          <el-col :xs="24" :sm="8">
+            <el-card class="stat-card">
+              <div class="stat-content">
+                <div class="stat-icon">👥</div>
+                <div>
+                  <div class="stat-number">{{ users.length }}</div>
+                  <div class="stat-label">总用户数</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
 
-        <div class="users-table-container">
-          <div class="card">
+        <el-card>
+          <template #header>
             <div class="card-header">
               <h3>用户列表</h3>
-              <div class="search-box">
-                <input
-                  v-model="searchQuery"
-                  type="text"
-                  placeholder="搜索用户..."
-                  class="form-input"
-                />
-              </div>
+              <el-input
+                v-model="searchQuery"
+                placeholder="搜索用户..."
+                style="width: 300px"
+                clearable
+              >
+                <template #prefix>
+                  <el-icon><Search /></el-icon>
+                </template>
+              </el-input>
             </div>
-            <div class="card-body">
-              <div v-if="filteredUsers.length === 0" class="empty-state">
-                <div class="empty-icon">👤</div>
-                <h4>暂无用户</h4>
-                <p>点击"添加用户"按钮创建第一个用户</p>
-              </div>
-              <div v-else class="users-table">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>用户名</th>
-                      <th>ID</th>
-                      <th>Token</th>
-                      <th>创建时间</th>
-                      <th>过期时间</th>
-                      <th>操作</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="user in filteredUsers" :key="user.id">
-                      <td>
-                        <div class="user-info">
-                          <div class="user-avatar">{{ (user.name || user.id).charAt(0).toUpperCase() }}</div>
-                          <span>{{ user.name || user.id }}</span>
-                        </div>
-                      </td>
-                      <td>{{ user.id }}</td>
-                      <td>
-                        <button @click="copyToken(user.token)" class="btn btn-sm btn-outline-secondary">复制</button>
-                      </td>
-                      <td>{{ formatDate(user.createdAt) }}</td>
-                      <td>{{ user.expiresAt ? formatDate(user.expiresAt) : '永久' }}</td>
-                      <td>
-                        <div class="action-buttons">
-                          <button @click="editUser(user)" class="btn btn-sm btn-secondary">编辑</button>
-                          <button @click="deleteUser(user)" class="btn btn-sm btn-danger">删除</button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
+          </template>
+
+          <el-empty v-if="filteredUsers.length === 0" description="暂无用户">
+            <el-button @click="showCreateModal = true" type="primary">添加用户</el-button>
+          </el-empty>
+
+          <el-table v-else :data="filteredUsers" stripe>
+            <el-table-column label="用户名" prop="name" min-width="150">
+              <template #default="{ row }">
+                <div class="user-info">
+                  <el-avatar :size="32" class="user-avatar">
+                    {{ (row.name || row.id).charAt(0).toUpperCase() }}
+                  </el-avatar>
+                  <span>{{ row.name || row.id }}</span>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column label="ID" prop="id" min-width="120" />
+            <el-table-column label="Token" min-width="120">
+              <template #default="{ row }">
+                <el-button @click="copyToken(row.token)" size="small" type="primary" link>
+                  <el-icon><DocumentCopy /></el-icon>
+                  复制
+                </el-button>
+              </template>
+            </el-table-column>
+            <el-table-column label="创建时间" min-width="140">
+              <template #default="{ row }">
+                {{ formatDate(row.createdAt) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="过期时间" min-width="140">
+              <template #default="{ row }">
+                {{ row.expiresAt ? formatDate(row.expiresAt) : '永久' }}
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" min-width="160" fixed="right">
+              <template #default="{ row }">
+                <div class="action-buttons">
+                  <el-button @click="editUser(row)" size="small" type="primary" link>
+                    <el-icon><Edit /></el-icon>
+                    编辑
+                  </el-button>
+                  <el-button @click="deleteUser(row)" size="small" type="danger" link>
+                    <el-icon><Delete /></el-icon>
+                    删除
+                  </el-button>
+                </div>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+      </el-main>
+    </el-container>
 
     <!-- Create/Edit User Modal -->
-    <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click="closeModals">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h3>{{ showCreateModal ? '添加用户' : '编辑用户' }}</h3>
-          <button @click="closeModals" class="close-btn">✕</button>
-        </div>
-        <div class="modal-body">
-          <form @submit.prevent="saveUser">
-            <div class="form-group">
-              <label class="form-label">用户 ID</label>
-              <input v-model="userForm.id" type="text" :disabled="showEditModal" required class="form-input" />
-              <small v-if="showCreateModal" class="form-text">用户的唯一标识符。</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">名称</label>
-              <input v-model="userForm.name" type="text" class="form-input" />
-              <small class="form-text">可选。如果未提供，将默认使用 ID 的值。</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">权限</label>
-              <input v-model="permissionsForInput" type="text" class="form-input" />
-              <small class="form-text">以逗号分隔的字符串数组，例如 "tool:calculator,tool:weather"。`*` 代表所有权限。</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">速率限制 (每小时请求数)</label>
-              <input v-model.number="userForm.rateLimits.requests" type="number" class="form-input" />
-            </div>
-             <div class="form-group">
-              <label class="form-label">过期时间</label>
-              <input v-model="userForm.expiresAt" type="datetime-local" class="form-input" />
-              <small class="form-text">可选。如果为 null 或不提供，则永不过期。</small>
-            </div>
-            <div class="modal-actions">
-              <button type="button" @click="closeModals" class="btn btn-secondary">取消</button>
-              <button type="submit" class="btn btn-primary">保存</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showModal"
+      :title="showCreateModal ? '添加用户' : '编辑用户'"
+      width="500px"
+    >
+      <el-form @submit.prevent="saveUser" label-position="top">
+        <el-form-item label="用户 ID">
+          <el-input v-model="userForm.id" :disabled="showEditModal" required />
+          <div v-if="showCreateModal" class="form-text">用户的唯一标识符。</div>
+        </el-form-item>
+        
+        <el-form-item label="名称">
+          <el-input v-model="userForm.name" />
+          <div class="form-text">可选。如果未提供，将默认使用 ID 的值。</div>
+        </el-form-item>
+        
+        <el-form-item label="权限">
+          <el-input v-model="permissionsForInput" />
+          <div class="form-text">以逗号分隔的字符串数组，例如 "tool:calculator,tool:weather"。`*` 代表所有权限。</div>
+        </el-form-item>
+        
+        <el-form-item label="速率限制 (每小时请求数)">
+          <el-input-number v-model="userForm.rateLimits.requests" :min="1" :max="10000" />
+        </el-form-item>
+        
+        <el-form-item label="过期时间">
+          <el-date-picker
+            v-model="userForm.expiresAt"
+            type="datetime"
+            placeholder="选择过期时间"
+            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DDTHH:mm"
+            style="width: 100%"
+          />
+          <div class="form-text">可选。如果为空，则永不过期。</div>
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="closeModals">取消</el-button>
+        <el-button @click="saveUser" type="primary">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import Swal from 'sweetalert2'
+import { SwitchButton, Plus, Refresh, Search, DocumentCopy, Edit, Delete } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -189,36 +212,29 @@ const filteredUsers = computed(() => {
   )
 })
 
+const showModal = computed({
+  get: () => showCreateModal.value || showEditModal.value,
+  set: (val) => {
+    if (!val) {
+      showCreateModal.value = false
+      showEditModal.value = false
+    }
+  }
+})
 
 const copyToken = async (token) => {
   if (!token) {
-    Swal.fire({
-      icon: 'warning',
-      title: '无 Token',
-      text: '没有可复制的 Token。',
-      confirmButtonColor: '#667eea',
-    });
-    return;
+    ElMessage.warning('没有可复制的 Token')
+    return
   }
   try {
-    await navigator.clipboard.writeText(token);
-    Swal.fire({
-      icon: 'success',
-      title: '复制成功',
-      text: 'Token 已复制到剪贴板',
-      timer: 1500,
-      showConfirmButton: false,
-    });
+    await navigator.clipboard.writeText(token)
+    ElMessage.success('Token 已复制到剪贴板')
   } catch (err) {
-    console.error('Failed to copy token: ', err);
-    Swal.fire({
-      icon: 'error',
-      title: '复制失败',
-      text: '请检查浏览器权限或是否在 HTTPS 环境下。',
-      confirmButtonColor: '#667eea',
-    });
+    console.error('Failed to copy token: ', err)
+    ElMessage.error('复制失败，请检查浏览器权限或是否在 HTTPS 环境下')
   }
-};
+}
 
 const formatDate = (date) => {
   if (!date) return 'N/A'
@@ -252,7 +268,7 @@ const refreshUsers = async () => {
 }
 
 const editUser = (user) => {
-  editingUser.value = JSON.parse(JSON.stringify(user)); // Store original for diffing
+  editingUser.value = JSON.parse(JSON.stringify(user)) // Store original for diffing
   userForm.value = JSON.parse(JSON.stringify(user)) // Deep copy to avoid reactivity issues
   if (userForm.value.expiresAt) {
     // Convert to 'YYYY-MM-DDTHH:mm' format for datetime-local input
@@ -263,43 +279,33 @@ const editUser = (user) => {
 }
 
 const deleteUser = async (user) => {
-  const result = await Swal.fire({
-    title: `确定要删除用户 "${user.name || user.id}" 吗？`,
-    text: "此操作不可撤销。",
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-    confirmButtonText: '确认删除',
-    cancelButtonText: '取消'
-  });
-
-  if (result.isConfirmed) {
-    try {
-      const { defaultClient } = await import('../api/client.js');
-      await defaultClient.deleteUser(user.id);
-
-      const index = users.value.findIndex(u => u.id === user.id);
-      if (index !== -1) {
-        users.value.splice(index, 1);
+  try {
+    await ElMessageBox.confirm(
+      `此操作不可撤销。`,
+      `确定要删除用户 "${user.name || user.id}" 吗？`,
+      {
+        confirmButtonText: '确认删除',
+        cancelButtonText: '取消',
+        type: 'warning',
       }
+    )
 
-      Swal.fire(
-        '已删除!',
-        `用户 "${user.name || user.id}" 已被删除。`,
-        'success'
-      );
-    } catch (error) {
-      console.error('Failed to delete user:', error);
-      Swal.fire(
-        '删除失败',
-        '删除用户时出错: ' + (error.message || '未知错误'),
-        'error'
-      );
+    const { defaultClient } = await import('../api/client.js')
+    await defaultClient.deleteUser(user.id)
+
+    const index = users.value.findIndex(u => u.id === user.id)
+    if (index !== -1) {
+      users.value.splice(index, 1)
+    }
+
+    ElMessage.success(`用户 "${user.name || user.id}" 已被删除`)
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to delete user:', error)
+      ElMessage.error('删除用户时出错: ' + (error.message || '未知错误'))
     }
   }
-};
-
+}
 
 const closeModals = () => {
   showCreateModal.value = false
@@ -328,12 +334,12 @@ const saveUser = async () => {
         createData.permissions = createData.permissions.split(',').map(p => p.trim()).filter(p => p)
       }
       if (createData.rateLimits && createData.rateLimits.requests) {
-        createData.rateLimits.requests = Number(createData.rateLimits.requests);
+        createData.rateLimits.requests = Number(createData.rateLimits.requests)
       } else {
-        createData.rateLimits = { requests: 1000, window: 3600000 };
+        createData.rateLimits = { requests: 1000, window: 3600000 }
       }
       if (createData.rateLimits && !createData.rateLimits.window) {
-        createData.rateLimits.window = 3600000;
+        createData.rateLimits.window = 3600000
       }
       if (createData.expiresAt) {
         createData.expiresAt = new Date(createData.expiresAt).toISOString()
@@ -353,7 +359,7 @@ const saveUser = async () => {
       }
 
       // 2. Compare permissions
-      const formPermissions = Array.isArray(userForm.value.permissions) ? userForm.value.permissions : userForm.value.permissions.split(',').map(p => p.trim()).filter(p => p);
+      const formPermissions = Array.isArray(userForm.value.permissions) ? userForm.value.permissions : userForm.value.permissions.split(',').map(p => p.trim()).filter(p => p)
       if (JSON.stringify(formPermissions) !== JSON.stringify(originalUser.permissions)) {
         updateData.permissions = formPermissions
       }
@@ -377,10 +383,10 @@ const saveUser = async () => {
       }
 
       if (Object.keys(updateData).length > 0) {
-        await defaultClient.updateUser(id, updateData);
+        await defaultClient.updateUser(id, updateData)
       } else {
         // No changes, just close the modal without making an API call
-        console.log("No changes detected, skipping update.");
+        console.log("No changes detected, skipping update.")
       }
     }
     
@@ -389,7 +395,7 @@ const saveUser = async () => {
     
   } catch (error) {
     console.error('Failed to save user:', error)
-    alert('保存用户失败: ' + (error.message || '未知错误'))
+    ElMessage.error('保存用户失败: ' + (error.message || '未知错误'))
   }
 }
 
@@ -412,75 +418,57 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.users {
+.users-layout {
   min-height: 100vh;
-  background-color: #f7fafc;
 }
 
-.navbar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 20px;
+.users-header {
+  background: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-lighter);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
 }
 
-.navbar-brand h1 {
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.brand-title {
   font-size: 20px;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--el-text-color-primary);
   margin: 0;
 }
 
-.navbar-nav {
+.header-nav {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.nav-link {
-  text-decoration: none;
-  color: #718096;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #2d3748;
-  background-color: #f7fafc;
-}
-
-.nav-link.active {
-  color: #667eea;
-  background-color: #eef2ff;
-}
-
-.main-content {
-  padding: 32px 0;
+.users-main {
+  padding: 24px;
+  background: var(--el-bg-color-page);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
-.header-content h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 4px 0;
+.page-header h2 {
+  font-size: 24px;
+  margin: 0 0 8px 0;
 }
 
-.header-content p {
-  color: #718096;
+.page-header p {
   margin: 0;
+  color: var(--el-text-color-regular);
 }
 
 .header-actions {
@@ -488,18 +476,15 @@ onMounted(async () => {
   gap: 12px;
 }
 
-.users-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+.stats-row {
+  margin-bottom: 24px;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+.stat-content {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -512,54 +497,31 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eef2ff;
+  background: var(--el-color-primary-light-9);
   border-radius: 8px;
 }
 
 .stat-number {
   font-size: 20px;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--el-text-color-primary);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #718096;
+  color: var(--el-text-color-regular);
   margin-top: 2px;
 }
 
-.users-table-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.search-box {
-  width: 300px;
-}
-
-.users-table {
-  overflow-x: auto;
-}
-
-.users-table table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.users-table th,
-.users-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.users-table th {
-  background: #f7fafc;
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 14px;
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
 }
 
 .user-info {
@@ -569,16 +531,7 @@ onMounted(async () => {
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #667eea;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
+  background: var(--el-color-primary);
 }
 
 .action-buttons {
@@ -586,106 +539,32 @@ onMounted(async () => {
   gap: 8px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
-}
-
-.empty-state h4 {
-  font-size: 18px;
-  color: #2d3748;
-  margin: 0 0 8px 0;
-}
-
-.empty-state p {
-  color: #718096;
-  margin: 0;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #718096;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 24px;
+.form-text {
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  margin-top: 4px;
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+  }
+  
+  .navbar-menu {
+    margin: 10px 0;
+  }
+  
   .page-header {
     flex-direction: column;
     gap: 16px;
-    align-items: stretch;
   }
-
-  .header-actions {
-    justify-content: flex-start;
-  }
-
-  .users-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .search-box {
-    width: 100%;
-  }
-
-  .users-table {
-    font-size: 14px;
-  }
-
-  .action-buttons {
+  
+  .card-header {
     flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
   }
 }
 </style>

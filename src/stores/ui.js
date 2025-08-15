@@ -4,7 +4,7 @@ import { ref, computed, watch } from 'vue'
 export const useUIStore = defineStore('ui', () => {
   // 主题设置
   const theme = ref('light')
-  const previewTheme = ref(null) // 临时预览主题
+  const previewTheme = ref(null)
   const systemTheme = ref('light')
   
   // Login界面自定义设置
@@ -37,77 +37,24 @@ export const useUIStore = defineStore('ui', () => {
     }
   })
 
-  // 主题预设
+  // 简化的主题预设
   const themes = ref({
     light: {
       name: '浅色主题',
-      colors: {
-        primary: '#667eea',
-        secondary: '#764ba2',
-        background: '#ffffff',
-        surface: '#f7fafc',
-        text: '#2d3748',
-        textSecondary: '#718096',
-        border: '#e2e8f0',
-        success: '#38a169',
-        warning: '#d69e2e',
-        error: '#e53e3e',
-        info: '#3182ce'
-      }
+      isDark: false
     },
     dark: {
       name: '深色主题',
-      colors: {
-        primary: '#667eea',
-        secondary: '#764ba2',
-        background: '#1a202c',
-        surface: '#2d3748',
-        text: '#f7fafc',
-        textSecondary: '#a0aec0',
-        border: '#4a5568',
-        success: '#48bb78',
-        warning: '#ed8936',
-        error: '#f56565',
-        info: '#4299e1'
-      }
+      isDark: true
     },
-    blue: {
-      name: '蓝色主题',
-      colors: {
-        primary: '#3182ce',
-        secondary: '#2c5282',
-        background: '#ffffff',
-        surface: '#ebf8ff',
-        text: '#1a365d',
-        textSecondary: '#4a5568',
-        border: '#bee3f8',
-        success: '#38a169',
-        warning: '#d69e2e',
-        error: '#e53e3e',
-        info: '#3182ce'
-      }
-    },
-    purple: {
-      name: '紫色主题',
-      colors: {
-        primary: '#805ad5',
-        secondary: '#553c9a',
-        background: '#ffffff',
-        surface: '#faf5ff',
-        text: '#322659',
-        textSecondary: '#4a5568',
-        border: '#d6bcfa',
-        success: '#38a169',
-        warning: '#d69e2e',
-        error: '#e53e3e',
-        info: '#805ad5'
-      }
+    auto: {
+      name: '跟随系统',
+      isDark: null // Will be determined by system
     }
   })
 
-  // 计算当前主题（全局应用的主题，不包含预览）
+  // 计算当前主题
   const currentTheme = computed(() => {
-    // 全局主题不使用预览主题，只使用保存的主题
     const activeTheme = theme.value
     if (activeTheme === 'auto') {
       return themes.value[systemTheme.value] || themes.value.light
@@ -115,7 +62,7 @@ export const useUIStore = defineStore('ui', () => {
     return themes.value[activeTheme] || themes.value.light
   })
 
-  // 计算预览主题（仅用于Settings页面预览）
+  // 计算预览主题
   const currentPreviewTheme = computed(() => {
     const activeTheme = previewTheme.value || theme.value
     if (activeTheme === 'auto') {
@@ -137,26 +84,23 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
-  // 应用主题到DOM（只应用保存的主题，不包含预览）
+  // 应用主题到HTML元素
   const applyTheme = () => {
     if (typeof document !== 'undefined') {
-      const root = document.documentElement
-      const colors = currentTheme.value.colors
-      
-      // 设置CSS变量
-      Object.entries(colors).forEach(([key, value]) => {
-        root.style.setProperty(`--color-${key}`, value)
-      })
-      
-      // 设置主题类名（只使用保存的主题）
-      root.className = root.className.replace(/theme-\w+/g, '')
+      const html = document.documentElement
       const activeTheme = theme.value
-      root.classList.add(`theme-${activeTheme === 'auto' ? systemTheme.value : activeTheme}`)
+      const resolvedTheme = activeTheme === 'auto' ? systemTheme.value : activeTheme
+      
+      // Remove existing theme classes
+      html.classList.remove('theme-light', 'theme-dark')
+      
+      // Add current theme class
+      html.classList.add(`theme-${resolvedTheme}`)
     }
   }
 
   // 监听主题变化
-  watch([theme, systemTheme, previewTheme], applyTheme, { immediate: true })
+  watch([theme, systemTheme], applyTheme, { immediate: true })
 
   // 预览主题（不保存）
   const previewThemeChange = (newTheme) => {
@@ -166,7 +110,7 @@ export const useUIStore = defineStore('ui', () => {
   // 确认并应用主题（保存）
   const setTheme = (newTheme) => {
     theme.value = newTheme
-    previewTheme.value = null // 清除预览状态
+    previewTheme.value = null
     saveToLocalStorage()
   }
 
@@ -263,7 +207,7 @@ export const useUIStore = defineStore('ui', () => {
     
     // 计算属性
     currentTheme,
-    currentPreviewTheme, // 添加缺失的导出
+    currentPreviewTheme,
     
     // 方法
     setTheme,

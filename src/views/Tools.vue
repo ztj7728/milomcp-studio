@@ -1,218 +1,230 @@
 <template>
-  <div class="tools">
-    <nav class="navbar">
-      <div class="navbar-brand">
-        <h1>MiloMCP Studio</h1>
+  <div>
+    <el-container class="tools-layout">
+    <el-header class="tools-header">
+      <div class="header-left">
+        <h1 class="brand-title">MiloMCP Studio</h1>
       </div>
-      <div class="navbar-nav">
-        <RouterLink to="/dashboard" class="nav-link">仪表板</RouterLink>
-        <RouterLink to="/tools" class="nav-link active">工具管理</RouterLink>
-        <RouterLink to="/users" class="nav-link" v-if="authStore.isAdmin">用户管理</RouterLink>
-        <RouterLink to="/settings" class="nav-link">设置</RouterLink>
-        <button @click="handleLogout" class="btn btn-sm btn-secondary">退出登录</button>
+      <div class="header-nav">
+        <el-menu mode="horizontal" :default-active="$route.name" router>
+          <el-menu-item index="Dashboard">仪表板</el-menu-item>
+          <el-menu-item index="Tools">工具管理</el-menu-item>
+          <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
+          <el-menu-item index="Settings">设置</el-menu-item>
+        </el-menu>
+        <el-button type="primary" @click="handleLogout" size="small">
+          <el-icon><SwitchButton /></el-icon>
+          退出登录
+        </el-button>
       </div>
-    </nav>
+    </el-header>
 
-    <main class="main-content">
-      <div class="container">
+    <el-main class="tools-main">
         <div class="page-header">
-          <div class="header-content">
+          <div>
             <h2>工具管理</h2>
             <p>管理和监控 MiloMCP 系统工具</p>
           </div>
           <div class="header-actions">
-            <button @click="refreshTools" class="btn btn-secondary" :disabled="isLoading">
-              <span v-if="isLoading" class="loading"></span>
-              🔄 刷新工具
-            </button>
-            <button @click="reloadAllTools" class="btn btn-primary" :disabled="isLoading">
-              ♻️ 重载所有工具
-            </button>
+            <el-button @click="refreshTools" :loading="isLoading" type="default">
+              <el-icon><Refresh /></el-icon>
+              刷新工具
+            </el-button>
+            <el-button @click="reloadAllTools" :loading="isLoading" type="primary">
+              <el-icon><RefreshRight /></el-icon>
+              重载所有工具
+            </el-button>
           </div>
         </div>
 
-        <div class="tools-stats">
-          <div class="stat-card">
-            <div class="stat-icon">🛠️</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ tools.length }}</div>
-              <div class="stat-label">总工具数</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">✅</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ enabledTools }}</div>
-              <div class="stat-label">已启用</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ totalCalls }}</div>
-              <div class="stat-label">总调用次数</div>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⚡</div>
-            <div class="stat-content">
-              <div class="stat-number">{{ avgResponseTime }}ms</div>
-              <div class="stat-label">平均响应时间</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="tools-grid">
-          <div v-for="tool in tools" :key="tool.name" class="tool-card">
-            <div class="tool-header">
-              <div class="tool-info">
-                <h3>{{ tool.name }}</h3>
-                <p>{{ tool.description }}</p>
-              </div>
-              <div class="tool-status">
-                <span :class="['status-badge', tool.enabled ? 'status-success' : 'status-error']">
-                  {{ tool.enabled ? '已启用' : '已禁用' }}
-                </span>
-              </div>
-            </div>
-
-            <div class="tool-details">
-              <div class="detail-row">
-                <span class="label">类别:</span>
-                <span class="value">{{ tool.category }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">版本:</span>
-                <span class="value">{{ tool.version }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">调用次数:</span>
-                <span class="value">{{ tool.callCount }}</span>
-              </div>
-              <div class="detail-row">
-                <span class="label">平均响应:</span>
-                <span class="value">{{ tool.avgResponseTime }}ms</span>
-              </div>
-            </div>
-
-            <div class="tool-schema">
-              <h4>输入参数</h4>
-              <div class="schema-list">
-                <div v-for="param in tool.inputSchema?.properties" :key="param.name" class="param-item">
-                  <span class="param-name">{{ param.name }}</span>
-                  <span class="param-type">{{ param.type }}</span>
-                  <span v-if="param.required" class="param-required">必需</span>
-                </div>
-                <div v-if="!tool.inputSchema?.properties?.length" class="empty-schema">
-                  无参数
+        <el-row :gutter="20" class="stats-row">
+          <el-col :xs="12" :sm="6">
+            <el-card class="stat-card">
+              <div class="stat-content">
+                <div class="stat-icon">🛠️</div>
+                <div>
+                  <div class="stat-number">{{ tools.length }}</div>
+                  <div class="stat-label">总工具数</div>
                 </div>
               </div>
-            </div>
+            </el-card>
+          </el-col>
+          <el-col :xs="12" :sm="6">
+            <el-card class="stat-card">
+              <div class="stat-content">
+                <div class="stat-icon">✅</div>
+                <div>
+                  <div class="stat-number">{{ enabledTools }}</div>
+                  <div class="stat-label">已启用</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :xs="12" :sm="6">
+            <el-card class="stat-card">
+              <div class="stat-content">
+                <div class="stat-icon">📊</div>
+                <div>
+                  <div class="stat-number">{{ totalCalls }}</div>
+                  <div class="stat-label">总调用次数</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+          <el-col :xs="12" :sm="6">
+            <el-card class="stat-card">
+              <div class="stat-content">
+                <div class="stat-icon">⚡</div>
+                <div>
+                  <div class="stat-number">{{ avgResponseTime }}ms</div>
+                  <div class="stat-label">平均响应时间</div>
+                </div>
+              </div>
+            </el-card>
+          </el-col>
+        </el-row>
 
-            <div class="tool-actions">
-              <button @click="testTool(tool)" class="btn btn-sm btn-primary">测试工具</button>
-              <button @click="reloadTool(tool)" class="btn btn-sm btn-secondary">重载</button>
-              <button 
-                @click="toggleTool(tool)" 
-                :class="['btn', 'btn-sm', tool.enabled ? 'btn-danger' : 'btn-success']"
-              >
-                {{ tool.enabled ? '禁用' : '启用' }}
-              </button>
-              <button @click="showToolLogs(tool)" class="btn btn-sm btn-secondary">查看日志</button>
-            </div>
-          </div>
-        </div>
+        <el-row :gutter="20">
+          <el-col v-for="tool in tools" :key="tool.name" :xs="24" :sm="12" :lg="8">
+            <el-card class="tool-card">
+              <template #header>
+                <div class="tool-header">
+                  <div>
+                    <h3>{{ tool.name }}</h3>
+                    <p>{{ tool.description }}</p>
+                  </div>
+                  <el-tag :type="tool.enabled ? 'success' : 'danger'">
+                    {{ tool.enabled ? '已启用' : '已禁用' }}
+                  </el-tag>
+                </div>
+              </template>
 
-        <div v-if="tools.length === 0" class="empty-state">
-          <div class="empty-icon">🛠️</div>
-          <h3>暂无工具</h3>
-          <p>系统中还没有注册任何工具，请检查 MiloMCP 服务器配置</p>
-          <button @click="refreshTools" class="btn btn-primary">刷新工具列表</button>
-        </div>
-      </div>
-    </main>
+              <div class="tool-details">
+                <el-descriptions :column="1" size="small">
+                  <el-descriptions-item label="类别">{{ tool.category }}</el-descriptions-item>
+                  <el-descriptions-item label="版本">{{ tool.version }}</el-descriptions-item>
+                  <el-descriptions-item label="调用次数">{{ tool.callCount }}</el-descriptions-item>
+                  <el-descriptions-item label="平均响应">{{ tool.avgResponseTime }}ms</el-descriptions-item>
+                </el-descriptions>
+              </div>
+
+              <div class="tool-schema">
+                <h4>输入参数</h4>
+                <div class="schema-list">
+                  <el-tag
+                    v-for="param in tool.inputSchema?.properties"
+                    :key="param.name"
+                    size="small"
+                    class="param-tag"
+                  >
+                    {{ param.name }} ({{ param.type }})
+                    <el-icon v-if="param.required" color="#f56c6c"><StarFilled /></el-icon>
+                  </el-tag>
+                  <div v-if="!tool.inputSchema?.properties?.length" class="empty-schema">
+                    无参数
+                  </div>
+                </div>
+              </div>
+
+              <template #footer>
+                <div class="tool-actions">
+                  <el-button @click="testTool(tool)" size="small" type="primary">测试工具</el-button>
+                  <el-button @click="reloadTool(tool)" size="small">重载</el-button>
+                  <el-button 
+                    @click="toggleTool(tool)" 
+                    size="small"
+                    :type="tool.enabled ? 'danger' : 'success'"
+                  >
+                    {{ tool.enabled ? '禁用' : '启用' }}
+                  </el-button>
+                  <el-button @click="showToolLogs(tool)" size="small">查看日志</el-button>
+                </div>
+              </template>
+            </el-card>
+          </el-col>
+        </el-row>
+
+        <el-empty v-if="tools.length === 0" description="暂无工具">
+          <el-button @click="refreshTools" type="primary">刷新工具列表</el-button>
+        </el-empty>
+      </el-main>
+    </el-container>
 
     <!-- Tool Test Modal -->
-    <div v-if="showTestModal" class="modal-overlay" @click="closeTestModal">
-      <div class="modal large-modal" @click.stop>
-        <div class="modal-header">
-          <h3>测试工具: {{ selectedTool?.name }}</h3>
-          <button @click="closeTestModal" class="close-btn">✕</button>
+    <el-dialog
+      v-model="showTestModal"
+      :title="`测试工具: ${selectedTool?.name}`"
+      width="600px"
+    >
+      <el-form label-position="top">
+        <el-form-item label="输入参数 (JSON)">
+          <el-input
+            v-model="testInput"
+            type="textarea"
+            :rows="6"
+            placeholder="请输入 JSON 格式的参数..."
+          />
+        </el-form-item>
+      </el-form>
+      
+      <div v-if="testResult" class="test-result">
+        <h4>测试结果</h4>
+        <div class="result-status">
+          <el-tag :type="testResult.success ? 'success' : 'danger'">
+            {{ testResult.success ? '成功' : '失败' }}
+          </el-tag>
+          <span class="response-time">响应时间: {{ testResult.responseTime }}ms</span>
         </div>
-        <div class="modal-body">
-          <div class="test-form">
-            <div class="form-group">
-              <label class="form-label">输入参数 (JSON)</label>
-              <textarea
-                v-model="testInput"
-                class="form-textarea"
-                rows="6"
-                placeholder="请输入 JSON 格式的参数..."
-              ></textarea>
-            </div>
-            <div class="test-actions">
-              <button @click="runTest" class="btn btn-primary" :disabled="isTestRunning">
-                <span v-if="isTestRunning" class="loading"></span>
-                {{ isTestRunning ? '运行中...' : '运行测试' }}
-              </button>
-            </div>
-          </div>
-          
-          <div v-if="testResult" class="test-result">
-            <h4>测试结果</h4>
-            <div class="result-status">
-              <span :class="['status-badge', testResult.success ? 'status-success' : 'status-error']">
-                {{ testResult.success ? '成功' : '失败' }}
-              </span>
-              <span class="response-time">响应时间: {{ testResult.responseTime }}ms</span>
-            </div>
-            <pre class="result-content">{{ JSON.stringify(testResult.data, null, 2) }}</pre>
-          </div>
-        </div>
+        <el-input
+          :model-value="JSON.stringify(testResult.data, null, 2)"
+          type="textarea"
+          readonly
+          :rows="10"
+          class="result-content"
+        />
       </div>
-    </div>
+
+      <template #footer>
+        <el-button @click="closeTestModal">取消</el-button>
+        <el-button @click="runTest" type="primary" :loading="isTestRunning">
+          {{ isTestRunning ? '运行中...' : '运行测试' }}
+        </el-button>
+      </template>
+    </el-dialog>
 
     <!-- Tool Logs Modal -->
-    <div v-if="showLogsModal" class="modal-overlay" @click="closeLogsModal">
-      <div class="modal large-modal" @click.stop>
-        <div class="modal-header">
-          <h3>工具日志: {{ selectedTool?.name }}</h3>
-          <button @click="closeLogsModal" class="close-btn">✕</button>
-        </div>
-        <div class="modal-body">
-          <div class="logs-container">
-            <div class="logs-header">
-              <div class="log-filters">
-                <select v-model="logLevel" class="form-select">
-                  <option value="all">所有级别</option>
-                  <option value="info">信息</option>
-                  <option value="warn">警告</option>
-                  <option value="error">错误</option>
-                </select>
-              </div>
-              <button @click="refreshLogs" class="btn btn-sm btn-secondary">刷新日志</button>
-            </div>
-            <div class="logs-content">
-              <div v-for="log in filteredLogs" :key="log.id" :class="['log-entry', `log-${log.level}`]">
-                <div class="log-timestamp">{{ formatTimestamp(log.timestamp) }}</div>
-                <div class="log-level">{{ log.level.toUpperCase() }}</div>
-                <div class="log-message">{{ log.message }}</div>
-              </div>
-              <div v-if="filteredLogs.length === 0" class="no-logs">
-                暂无日志记录
-              </div>
-            </div>
-          </div>
-        </div>
+    <el-dialog
+      v-model="showLogsModal"
+      :title="`工具日志: ${selectedTool?.name}`"
+      width="800px"
+    >
+      <div class="logs-header">
+        <el-select v-model="logLevel" placeholder="选择日志级别">
+          <el-option label="所有级别" value="all" />
+          <el-option label="信息" value="info" />
+          <el-option label="警告" value="warn" />
+          <el-option label="错误" value="error" />
+        </el-select>
+        <el-button @click="refreshLogs" size="small">刷新日志</el-button>
       </div>
-    </div>
+
+      <div class="logs-content">
+        <div v-for="log in filteredLogs" :key="log.id" class="log-entry">
+          <el-tag :type="getLogType(log.level)" size="small">{{ log.level.toUpperCase() }}</el-tag>
+          <span class="log-timestamp">{{ formatTimestamp(log.timestamp) }}</span>
+          <span class="log-message">{{ log.message }}</span>
+        </div>
+        <el-empty v-if="filteredLogs.length === 0" description="暂无日志记录" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import { SwitchButton, Refresh, RefreshRight, StarFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -354,13 +366,20 @@ const filteredLogs = computed(() => {
   return logs.sort((a, b) => b.timestamp - a.timestamp)
 })
 
+const getLogType = (level) => {
+  switch (level) {
+    case 'error': return 'danger'
+    case 'warn': return 'warning'
+    default: return 'info'
+  }
+}
+
 const formatTimestamp = (timestamp) => {
   return new Date(timestamp).toLocaleString('zh-CN')
 }
 
 const refreshTools = async () => {
   isLoading.value = true
-  // Simulate API call to refresh tools
   setTimeout(() => {
     isLoading.value = false
   }, 1000)
@@ -368,23 +387,20 @@ const refreshTools = async () => {
 
 const reloadAllTools = async () => {
   isLoading.value = true
-  // Simulate API call to reload all tools
   setTimeout(() => {
     isLoading.value = false
-    // Show success message
-    alert('所有工具已成功重载')
+    ElMessage.success('所有工具已成功重载')
   }, 2000)
 }
 
 const reloadTool = async (tool) => {
-  // Simulate tool reload
-  alert(`工具 "${tool.name}" 已重载`)
+  ElMessage.success(`工具 "${tool.name}" 已重载`)
 }
 
 const toggleTool = (tool) => {
   tool.enabled = !tool.enabled
   const status = tool.enabled ? '启用' : '禁用'
-  alert(`工具 "${tool.name}" 已${status}`)
+  ElMessage.success(`工具 "${tool.name}" 已${status}`)
 }
 
 const testTool = (tool) => {
@@ -398,14 +414,11 @@ const runTest = async () => {
   isTestRunning.value = true
   
   try {
-    // Parse input
     const input = JSON.parse(testInput.value)
     
-    // Simulate tool execution
     await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
     
-    // Simulate result
-    const success = Math.random() > 0.2 // 80% success rate
+    const success = Math.random() > 0.2
     const responseTime = Math.round(50 + Math.random() * 200)
     
     testResult.value = {
@@ -416,7 +429,6 @@ const runTest = async () => {
         : { error: 'Tool execution failed', code: 'EXECUTION_ERROR' }
     }
     
-    // Update tool stats
     selectedTool.value.callCount++
     selectedTool.value.avgResponseTime = Math.round(
       (selectedTool.value.avgResponseTime * (selectedTool.value.callCount - 1) + responseTime) / selectedTool.value.callCount
@@ -440,8 +452,7 @@ const showToolLogs = (tool) => {
 }
 
 const refreshLogs = () => {
-  // Simulate log refresh
-  alert('日志已刷新')
+  ElMessage.success('日志已刷新')
 }
 
 const closeTestModal = () => {
@@ -449,11 +460,6 @@ const closeTestModal = () => {
   selectedTool.value = null
   testInput.value = '{}'
   testResult.value = null
-}
-
-const closeLogsModal = () => {
-  showLogsModal.value = false
-  selectedTool.value = null
 }
 
 const handleLogout = () => {
@@ -467,75 +473,57 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tools {
+.tools-layout {
   min-height: 100vh;
-  background-color: #f7fafc;
 }
 
-.navbar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 20px;
+.tools-header {
+  background: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color-lighter);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 64px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 0 24px;
 }
 
-.navbar-brand h1 {
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.brand-title {
   font-size: 20px;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--el-text-color-primary);
   margin: 0;
 }
 
-.navbar-nav {
+.header-nav {
   display: flex;
   align-items: center;
   gap: 20px;
 }
 
-.nav-link {
-  text-decoration: none;
-  color: #718096;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #2d3748;
-  background-color: #f7fafc;
-}
-
-.nav-link.active {
-  color: #667eea;
-  background-color: #eef2ff;
-}
-
-.main-content {
-  padding: 32px 0;
+.tools-main {
+  padding: 24px;
+  background: var(--el-bg-color-page);
 }
 
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
-.header-content h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 4px 0;
+.page-header h2 {
+  font-size: 24px;
+  margin: 0 0 8px 0;
 }
 
-.header-content p {
-  color: #718096;
+.page-header p {
   margin: 0;
+  color: var(--el-text-color-regular);
 }
 
 .header-actions {
@@ -543,18 +531,15 @@ onMounted(() => {
   gap: 12px;
 }
 
-.tools-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+.stats-row {
+  margin-bottom: 24px;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 0;
+}
+
+.stat-content {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -567,126 +552,58 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eef2ff;
+  background: var(--el-color-primary-light-9);
   border-radius: 8px;
 }
 
 .stat-number {
   font-size: 20px;
   font-weight: 700;
-  color: #2d3748;
+  color: var(--el-text-color-primary);
 }
 
 .stat-label {
   font-size: 12px;
-  color: #718096;
+  color: var(--el-text-color-regular);
   margin-top: 2px;
 }
 
-.tools-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-  gap: 20px;
-}
-
 .tool-card {
-  background: white;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s ease;
-}
-
-.tool-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 20px;
 }
 
 .tool-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
 }
 
-.tool-info h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #2d3748;
+.tool-header h3 {
+  font-size: 16px;
   margin: 0 0 4px 0;
 }
 
-.tool-info p {
-  color: #718096;
+.tool-header p {
   font-size: 14px;
   margin: 0;
-}
-
-.tool-details {
-  margin-bottom: 16px;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.detail-row .label {
-  color: #718096;
-}
-
-.detail-row .value {
-  font-weight: 500;
-  color: #2d3748;
+  color: var(--el-text-color-regular);
 }
 
 .tool-schema {
-  margin-bottom: 20px;
+  margin: 16px 0;
 }
 
 .tool-schema h4 {
   font-size: 14px;
-  font-weight: 600;
-  color: #2d3748;
   margin: 0 0 8px 0;
 }
 
-.schema-list {
-  background: #f7fafc;
-  border-radius: 6px;
-  padding: 12px;
-}
-
-.param-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-  font-size: 12px;
-}
-
-.param-name {
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.param-type {
-  background: #e2e8f0;
-  padding: 2px 6px;
-  border-radius: 4px;
-  color: #4a5568;
-}
-
-.param-required {
-  background: #fed7d7;
-  color: #c53030;
-  padding: 2px 6px;
-  border-radius: 4px;
+.param-tag {
+  margin: 2px 4px 2px 0;
 }
 
 .empty-schema {
-  color: #718096;
+  color: var(--el-text-color-placeholder);
   font-size: 12px;
   font-style: italic;
 }
@@ -697,94 +614,14 @@ onMounted(() => {
   flex-wrap: wrap;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.empty-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-}
-
-.empty-state h3 {
-  font-size: 20px;
-  color: #2d3748;
-  margin: 0 0 8px 0;
-}
-
-.empty-state p {
-  color: #718096;
-  margin: 0 0 24px 0;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.large-modal {
-  max-width: 800px;
-}
-
-.modal-header {
-  padding: 20px;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 20px;
-  cursor: pointer;
-  color: #718096;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.test-form {
-  margin-bottom: 24px;
-}
-
-.test-actions {
-  margin-top: 16px;
-}
-
 .test-result {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 24px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .test-result h4 {
   font-size: 16px;
-  font-weight: 600;
   margin: 0 0 12px 0;
 }
 
@@ -797,21 +634,7 @@ onMounted(() => {
 
 .response-time {
   font-size: 12px;
-  color: #718096;
-}
-
-.result-content {
-  background: #f7fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 12px;
-  overflow-x: auto;
-  font-size: 12px;
-  max-height: 300px;
-}
-
-.logs-container {
-  max-height: 500px;
+  color: var(--el-text-color-regular);
 }
 
 .logs-header {
@@ -824,84 +647,51 @@ onMounted(() => {
 .logs-content {
   max-height: 400px;
   overflow-y: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
 }
 
 .log-entry {
-  padding: 8px 12px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 8px 0;
   display: flex;
   gap: 12px;
-  font-size: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
 .log-entry:last-child {
   border-bottom: none;
 }
 
-.log-info {
-  background: #f0f9ff;
-}
-
-.log-warn {
-  background: #fffbeb;
-}
-
-.log-error {
-  background: #fef2f2;
-}
-
 .log-timestamp {
-  color: #64748b;
+  color: var(--el-text-color-secondary);
   flex-shrink: 0;
   width: 120px;
-}
-
-.log-level {
-  font-weight: 600;
-  flex-shrink: 0;
-  width: 50px;
+  font-size: 12px;
 }
 
 .log-message {
   flex: 1;
-  color: #334155;
-}
-
-.no-logs {
-  padding: 40px;
-  text-align: center;
-  color: #718096;
-  font-style: italic;
+  color: var(--el-text-color-primary);
 }
 
 @media (max-width: 768px) {
+  .navbar {
+    flex-direction: column;
+    height: auto;
+    padding: 10px;
+  }
+  
+  .navbar-menu {
+    margin: 10px 0;
+  }
+  
   .page-header {
     flex-direction: column;
     gap: 16px;
-    align-items: stretch;
   }
-
-  .header-actions {
-    justify-content: flex-start;
-  }
-
-  .tools-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .tools-grid {
-    grid-template-columns: 1fr;
-  }
-
+  
   .tool-actions {
     flex-direction: column;
-  }
-
-  .modal {
-    margin: 20px;
-    width: calc(100% - 40px);
   }
 }
 </style>

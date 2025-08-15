@@ -1,121 +1,158 @@
 <template>
-  <div class="dashboard">
-    <nav class="navbar">
-      <div class="navbar-brand">
-        <h1>MiloMCP Studio</h1>
+  <el-container class="dashboard-layout">
+    <el-header class="dashboard-header">
+      <div class="header-left">
+        <h1 class="brand-title">MiloMCP Studio</h1>
       </div>
-      <div class="navbar-nav">
-        <RouterLink to="/dashboard" class="nav-link active">仪表板</RouterLink>
-        <RouterLink to="/tools" class="nav-link">工具管理</RouterLink>
-        <RouterLink to="/users" v-if="authStore.isAdmin" class="nav-link">用户管理</RouterLink>
-        <RouterLink to="/settings" class="nav-link">设置</RouterLink>
-        <button @click="handleLogout" class="btn btn-sm btn-secondary">退出登录</button>
+      <div class="header-nav">
+        <el-menu mode="horizontal" :default-active="$route.name" router>
+          <el-menu-item index="Dashboard">仪表板</el-menu-item>
+          <el-menu-item index="Tools">工具管理</el-menu-item>
+          <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
+          <el-menu-item index="Settings">设置</el-menu-item>
+        </el-menu>
+        <el-button type="primary" @click="handleLogout" size="small">
+          <el-icon><SwitchButton /></el-icon>
+          退出登录
+        </el-button>
       </div>
-    </nav>
+    </el-header>
 
-    <main class="main-content">
-      <div class="container">
-        <div class="dashboard-header">
-          <h2>欢迎使用 MiloMCP Studio</h2>
-          <p>高性能、优雅、轻量的 MiloMCP 管理平台</p>
-        </div>
+    <el-main class="dashboard-main">
+      <div class="welcome-section">
+        <h2>欢迎使用 MiloMCP Studio</h2>
+        <p>高性能、优雅、轻量的 MiloMCP 管理平台</p>
+      </div>
 
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon">🔧</div>
+      <el-row :gutter="24" class="stats-section">
+        <el-col :xs="24" :sm="12" :lg="6">
+          <el-card shadow="hover" class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ stats.toolsCount }}</div>
-              <div class="stat-label">工具总数</div>
+              <div class="stat-icon tools">
+                <el-icon size="24"><Tools /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ stats.toolsCount }}</div>
+                <div class="stat-label">工具总数</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">👥</div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <el-card shadow="hover" class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ stats.usersCount }}</div>
-              <div class="stat-label">用户总数</div>
+              <div class="stat-icon users">
+                <el-icon size="24"><User /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ stats.usersCount }}</div>
+                <div class="stat-label">用户总数</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">📡</div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <el-card shadow="hover" class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ stats.connectionsCount }}</div>
-              <div class="stat-label">活跃连接</div>
+              <div class="stat-icon connections">
+                <el-icon size="24"><Connection /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ stats.connectionsCount }}</div>
+                <div class="stat-label">活跃连接</div>
+              </div>
             </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon">⚡</div>
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :sm="12" :lg="6">
+          <el-card shadow="hover" class="stat-card">
             <div class="stat-content">
-              <div class="stat-number">{{ serverStatus }}</div>
-              <div class="stat-label">服务状态</div>
+              <div class="stat-icon server" :class="{ offline: serverStatus === '离线' }">
+                <el-icon size="24"><Monitor /></el-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{ serverStatus }}</div>
+                <div class="stat-label">服务状态</div>
+              </div>
             </div>
-          </div>
-        </div>
+          </el-card>
+        </el-col>
+      </el-row>
 
-        <div class="dashboard-content">
-          <div class="content-section">
-            <div class="card">
+      <el-row :gutter="24" class="content-section">
+        <el-col :xs="24" :lg="12">
+          <el-card>
+            <template #header>
               <div class="card-header">
-                <h3>服务器信息</h3>
+                <span>服务器信息</span>
+                <el-icon><Monitor /></el-icon>
               </div>
-              <div class="card-body">
-                <div class="info-grid">
-                  <div class="info-item">
-                    <label>服务器地址</label>
-                    <span>{{ serverInfo.url }}</span>
-                  </div>
-                  <div class="info-item">
-                    <label>运行时间</label>
-                    <span>{{ serverInfo.uptime }}</span>
-                  </div>
-                  <div class="info-item">
-                    <label>版本信息</label>
-                    <span>{{ serverInfo.version }}</span>
-                  </div>
-                  <div class="info-item">
-                    <label>认证状态</label>
-                    <span :class="['status-badge', authStore.isAuthenticated ? 'status-success' : 'status-error']">
-                      {{ authStore.isAuthenticated ? '已认证' : '未认证' }}
-                    </span>
-                  </div>
-                </div>
+            </template>
+            <div class="info-list">
+              <div class="info-item">
+                <span class="label">服务器地址</span>
+                <span class="value">{{ serverInfo.url }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">运行时间</span>
+                <span class="value">{{ serverInfo.uptime }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">版本信息</span>
+                <span class="value">{{ serverInfo.version }}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">认证状态</span>
+                <el-tag 
+                  :type="authStore.isAuthenticated ? 'success' : 'danger'"
+                  size="small"
+                >
+                  {{ authStore.isAuthenticated ? '已认证' : '未认证' }}
+                </el-tag>
               </div>
             </div>
-          </div>
-
-          <div class="content-section">
-            <div class="card">
+          </el-card>
+        </el-col>
+        <el-col :xs="24" :lg="12">
+          <el-card>
+            <template #header>
               <div class="card-header">
-                <h3>快速操作</h3>
+                <span>快速操作</span>
+                <el-icon><Setting /></el-icon>
               </div>
-              <div class="card-body">
-                <div class="action-buttons">
-                  <RouterLink to="/tools" class="btn btn-primary">
-                    🛠️ 管理工具
-                  </RouterLink>
-                  <RouterLink to="/users" v-if="authStore.isAdmin" class="btn btn-primary">
-                    👥 管理用户
-                  </RouterLink>
-                  <RouterLink to="/settings" class="btn btn-secondary">
-                    ⚙️ 系统设置
-                  </RouterLink>
-                  <button @click="refreshStats" class="btn btn-secondary" :disabled="isLoading">
-                    <span v-if="isLoading" class="loading"></span>
-                    🔄 刷新数据
-                  </button>
-                </div>
-              </div>
+            </template>
+            <div class="action-buttons">
+              <el-button type="primary" @click="$router.push('/tools')">
+                <el-icon><Tools /></el-icon>
+                管理工具
+              </el-button>
+              <el-button v-if="authStore.isAdmin" type="primary" @click="$router.push('/users')">
+                <el-icon><User /></el-icon>
+                管理用户
+              </el-button>
+              <el-button @click="$router.push('/settings')">
+                <el-icon><Setting /></el-icon>
+                系统设置
+              </el-button>
+              <el-button @click="refreshStats" :loading="isLoading">
+                <el-icon><Refresh /></el-icon>
+                刷新数据
+              </el-button>
             </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
+          </el-card>
+        </el-col>
+      </el-row>
+    </el-main>
+  </el-container>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import { 
+  Tools, User, Connection, Monitor, Setting, SwitchButton, Refresh 
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -141,11 +178,9 @@ const fetchStats = async () => {
   try {
     const { defaultClient } = await import('../api/client.js')
     
-    // Fetch server health which contains accurate statistics
     const health = await defaultClient.getHealth()
     
     if (health) {
-      // Use health endpoint data which contains accurate statistics
       if (health.tools && Array.isArray(health.tools)) {
         stats.toolsCount = health.tools.length
       }
@@ -155,7 +190,6 @@ const fetchStats = async () => {
         stats.connectionsCount = health.auth.activeConnections || 0
       }
       
-      // Update server status and info
       serverStatus.value = health.status === 'ok' ? '运行中' : '异常'
       
       if (health.uptime) {
@@ -179,7 +213,6 @@ const fetchStats = async () => {
   } catch (error) {
     console.error('Failed to fetch stats:', error)
     serverStatus.value = '离线'
-    // Keep existing stats if API fails
   }
 }
 
@@ -200,11 +233,8 @@ const handleLogout = async () => {
 }
 
 onMounted(async () => {
-  // Initial data fetch
   await fetchStats()
-  
-  // Set up periodic refresh
-  refreshInterval = setInterval(fetchStats, 30000) // Refresh every 30 seconds
+  refreshInterval = setInterval(fetchStats, 30000)
 })
 
 onUnmounted(() => {
@@ -215,192 +245,182 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.dashboard {
-  min-height: 100vh;
-  background-color: #f7fafc;
-}
-
-.navbar {
-  background: white;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 64px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.navbar-brand h1 {
-  font-size: 20px;
-  font-weight: 700;
-  color: #2d3748;
-  margin: 0;
-}
-
-.navbar-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.nav-link {
-  text-decoration: none;
-  color: #718096;
-  font-weight: 500;
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #2d3748;
-  background-color: #f7fafc;
-}
-
-.nav-link.active {
-  color: #667eea;
-  background-color: #eef2ff;
-}
-
-.main-content {
-  padding: 32px 0;
+.dashboard-layout {
+  height: 100vh;
 }
 
 .dashboard-header {
-  text-align: center;
-  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  background: var(--el-bg-color);
+  border-bottom: 1px solid var(--el-border-color);
 }
 
-.dashboard-header h2 {
-  font-size: 32px;
+.header-left .brand-title {
+  font-size: 20px;
   font-weight: 700;
-  color: #2d3748;
-  margin: 0 0 8px 0;
+  margin: 0;
+  color: var(--el-text-color-primary);
 }
 
-.dashboard-header p {
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.dashboard-main {
+  padding: 24px;
+  background: var(--el-bg-color-page);
+}
+
+.welcome-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.welcome-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--el-text-color-primary);
+}
+
+.welcome-section p {
   font-size: 16px;
-  color: #718096;
+  color: var(--el-text-color-regular);
   margin: 0;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 24px;
-  margin-bottom: 40px;
+.stats-section {
+  margin-bottom: 32px;
 }
 
 .stat-card {
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.stat-icon {
-  font-size: 32px;
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 12px;
+  height: 120px;
 }
 
 .stat-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 100%;
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-icon.tools {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-icon.users {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-icon.connections {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.stat-icon.server {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.stat-icon.server.offline {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.stat-info {
   flex: 1;
 }
 
 .stat-number {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
-  color: #2d3748;
-  line-height: 1;
+  color: var(--el-text-color-primary);
+  line-height: 1.2;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #718096;
+  color: var(--el-text-color-regular);
   margin-top: 4px;
 }
 
-.dashboard-content {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 24px;
-}
-
 .content-section {
-  width: 100%;
+  margin-bottom: 24px;
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
 .info-item {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--el-border-color-lighter);
 }
 
-.info-item label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #718096;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.info-item:last-child {
+  border-bottom: none;
 }
 
-.info-item span {
+.info-item .label {
   font-size: 14px;
-  color: #2d3748;
+  color: var(--el-text-color-regular);
   font-weight: 500;
 }
 
+.info-item .value {
+  font-size: 14px;
+  color: var(--el-text-color-primary);
+  font-weight: 600;
+}
+
 .action-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 12px;
 }
 
 @media (max-width: 768px) {
-  .navbar {
+  .dashboard-header {
     flex-direction: column;
-    height: auto;
-    padding: 16px 20px;
+    padding: 16px 24px;
+    gap: 16px;
   }
 
-  .navbar-nav {
+  .header-nav {
     width: 100%;
     justify-content: space-between;
-    margin-top: 12px;
   }
 
-  .dashboard-content {
-    grid-template-columns: 1fr;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .dashboard-main {
+    padding: 16px;
   }
 
   .action-buttons {
-    justify-content: center;
+    grid-template-columns: 1fr;
   }
 }
 </style>

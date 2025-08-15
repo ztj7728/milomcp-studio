@@ -9,18 +9,28 @@
     "preview": "vite preview",
     "serve": "vite preview --port 4173"
   },
-  "keywords": ["milomcp", "frontend", "vue3", "vite", "management", "api"],
+  "keywords": [
+    "milomcp",
+    "frontend",
+    "vue3",
+    "vite",
+    "management",
+    "api"
+  ],
   "author": "MiloMCP Studio",
   "license": "MIT",
   "dependencies": {
-    "vue": "^3.4.0",
-    "vue-router": "^4.2.5",
-    "pinia": "^2.1.7",
+    "@element-plus/icons-vue": "^2.3.2",
     "axios": "^1.6.0",
-    "sweetalert2": "^11.10.1"
+    "element-plus": "^2.10.7",
+    "pinia": "^2.1.7",
+    "sweetalert2": "^11.10.1",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.5.0",
+    "terser": "^5.43.1",
     "vite": "^5.0.0"
   }
 }

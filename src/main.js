@@ -1,6 +1,9 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia } from 'pinia'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import Login from './views/Login.vue'
 
@@ -80,6 +83,12 @@ const app = createApp(App)
 // Use plugins
 app.use(createPinia())
 app.use(router)
+app.use(ElementPlus)
+
+// Register Element Plus icons globally
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 
 // Global error handler
 app.config.errorHandler = (err, instance, info) => {

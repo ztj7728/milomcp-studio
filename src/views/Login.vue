@@ -1,46 +1,55 @@
 <template>
   <div class="login-container" :style="getBackgroundStyle()">
-    <div class="login-card">
+    <el-card class="login-card" shadow="always">
       <div class="login-header" :style="getHeaderStyle()" v-if="uiStore.loginCustomization.header.title || uiStore.loginCustomization.header.subtitle">
         <div v-if="uiStore.loginCustomization.header.showLogo" class="login-logo">
-          <!-- Logo placeholder -->
           <div class="logo-placeholder">📱</div>
         </div>
         <h1 v-if="uiStore.loginCustomization.header.title">{{ uiStore.loginCustomization.header.title }}</h1>
         <p v-if="uiStore.loginCustomization.header.subtitle">{{ uiStore.loginCustomization.header.subtitle }}</p>
       </div>
       
-      <form @submit.prevent="handleLogin" class="login-form">
-        <div class="form-group">
-          <label for="apiToken">API Token</label>
-          <input
-            id="apiToken"
-            v-model="apiToken"
+      <el-form @submit.prevent="handleLogin" class="login-form" :model="loginForm" ref="loginFormRef" :rules="rules">
+        <el-form-item prop="apiToken">
+          <el-input
+            v-model="loginForm.apiToken"
             type="password"
             placeholder="请输入您的 MiloMCP API Token"
-            required
+            size="large"
             :disabled="authStore.isLoading"
-            class="form-input"
-          />
-          <p class="form-hint">
+            show-password
+          >
+            <template #prefix>
+              <el-icon><Key /></el-icon>
+            </template>
+          </el-input>
+          <div class="form-hint">
             您可以使用 Admin Token 或通过管理员创建的用户 Token
-          </p>
-        </div>
+          </div>
+        </el-form-item>
         
-        <div v-if="authStore.lastError" class="error-message">
-          <span class="error-icon">⚠️</span>
-          {{ authStore.lastError }}
-        </div>
+        <el-alert 
+          v-if="authStore.lastError" 
+          :title="authStore.lastError"
+          type="error"
+          :closable="false"
+          show-icon
+          class="login-error"
+        />
         
-        <button
-          type="submit"
-          :disabled="authStore.isLoading || !apiToken.trim()"
-          class="login-button"
-        >
-          <span v-if="authStore.isLoading">登录中...</span>
-          <span v-else>登录</span>
-        </button>
-      </form>
+        <el-form-item>
+          <el-button
+            type="primary"
+            size="large"
+            @click="handleLogin"
+            :loading="authStore.isLoading"
+            :disabled="!loginForm.apiToken.trim()"
+            class="login-button"
+          >
+            {{ authStore.isLoading ? '登录中...' : '登录' }}
+          </el-button>
+        </el-form-item>
+      </el-form>
       
       <div class="login-footer" :style="getFooterStyle()" v-if="shouldShowFooter">
         <div v-if="uiStore.loginCustomization.footer.showFeatures && uiStore.loginCustomization.footer.features.length > 0" class="feature-list">
@@ -55,29 +64,37 @@
           <p>{{ uiStore.loginCustomization.footer.customText }}</p>
         </div>
       </div>
-    </div>
+    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { useUIStore } from '../stores/ui.js'
+import { Key } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const uiStore = useUIStore()
 
-const apiToken = ref('')
+const loginFormRef = ref()
+const loginForm = reactive({
+  apiToken: ''
+})
 
-// 计算属性
+const rules = {
+  apiToken: [
+    { required: true, message: '请输入 API Token', trigger: 'blur' }
+  ]
+}
+
 const shouldShowFooter = computed(() => {
   return (uiStore.loginCustomization.footer.showFeatures && uiStore.loginCustomization.footer.features.length > 0) ||
          uiStore.loginCustomization.footer.customText
 })
 
-// 样式方法
 const getBackgroundStyle = () => {
   const bg = uiStore.loginCustomization.background
   switch (bg.type) {
@@ -112,25 +129,22 @@ const getFooterStyle = () => {
 }
 
 const handleLogin = async () => {
-  authStore.clearError()
+  if (!loginFormRef.value) return
   
-  const result = await authStore.login(apiToken.value.trim())
-  
-  if (result.success) {
-    // Login successful, redirect to dashboard
-    router.push({ name: 'Dashboard' })
+  const isValid = await loginFormRef.value.validate().catch(() => false)
+  if (!isValid) return
+
+  try {
+    const success = await authStore.login(loginForm.apiToken.trim())
+    if (success) {
+      router.push({ name: 'Dashboard' })
+    }
+  } catch (error) {
+    console.error('Login failed:', error)
   }
-  // Error handling is managed by the store
 }
 
 onMounted(() => {
-  // Initialize UI store
-  uiStore.init()
-  
-  // Clear any existing errors when component mounts
-  authStore.clearError()
-  
-  // If already authenticated, redirect to dashboard
   if (authStore.isAuthenticated) {
     router.push({ name: 'Dashboard' })
   }
@@ -144,201 +158,121 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 20px;
-  transition: all 0.3s ease;
 }
 
 .login-card {
-  background: var(--surface-color, white);
-  border-radius: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  padding: 40px;
   width: 100%;
-  max-width: 480px;
-  animation: slideUp 0.6s ease-out;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  max-width: 440px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .login-header {
   text-align: center;
   margin-bottom: 32px;
-  padding: 1rem;
-  border-radius: 12px;
-  transition: all 0.3s ease;
+  padding: 24px;
+  border-radius: 8px;
 }
 
 .login-logo {
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .logo-placeholder {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+  font-size: 48px;
+  margin-bottom: 16px;
 }
 
 .login-header h1 {
   font-size: 28px;
   font-weight: 700;
   margin: 0 0 8px 0;
-  transition: color 0.3s ease;
 }
 
 .login-header p {
   font-size: 16px;
+  opacity: 0.8;
   margin: 0;
-  opacity: 0.9;
-  transition: color 0.3s ease;
 }
 
 .login-form {
-  margin-bottom: 32px;
-}
-
-.form-group {
-  margin-bottom: 24px;
-}
-
-.form-group label {
-  display: block;
-  font-weight: 600;
-  color: var(--text-color, #2d3748);
-  margin-bottom: 8px;
-  font-size: 14px;
-  transition: color 0.3s ease;
-}
-
-.form-input {
-  width: 100%;
-  padding: 12px 16px;
-  border: 2px solid var(--border-color, #e2e8f0);
-  border-radius: 8px;
-  font-size: 16px;
-  background-color: var(--surface-color, white);
-  color: var(--text-color, #2d3748);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
-  box-sizing: border-box;
-}
-
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary-color, #667eea);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-input:disabled {
-  background-color: var(--background-color, #f7fafc);
-  cursor: not-allowed;
+  padding: 0 24px;
 }
 
 .form-hint {
+  margin-top: 8px;
   font-size: 12px;
-  color: var(--text-secondary-color, #718096);
-  margin-top: 4px;
-  margin-bottom: 0;
-  transition: color 0.3s ease;
+  color: var(--el-text-color-regular);
+  line-height: 1.4;
 }
 
-.error-message {
-  background-color: #fed7d7;
-  border: 1px solid #feb2b2;
-  border-radius: 6px;
-  padding: 12px;
+.login-error {
   margin-bottom: 20px;
-  color: #c53030;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.error-icon {
-  font-size: 16px;
 }
 
 .login-button {
   width: 100%;
-  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 8px;
+  height: 48px;
   font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.login-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-}
-
-.login-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 .login-footer {
-  border-top: 1px solid var(--border-color, #e2e8f0);
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-top: 1rem;
-  transition: all 0.3s ease;
+  margin-top: 32px;
+  padding: 24px;
+  border-radius: 8px;
+  text-align: center;
 }
 
 .feature-list h3 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
-  margin: 0 0 12px 0;
-  transition: color 0.3s ease;
+  margin: 0 0 16px 0;
 }
 
 .feature-list ul {
   list-style: none;
   padding: 0;
   margin: 0;
+  text-align: left;
 }
 
 .feature-list li {
-  padding: 4px 0;
+  padding: 8px 0;
   font-size: 14px;
-  transition: color 0.3s ease;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.feature-list li::before {
-  content: '✓';
-  color: #4ade80;
-  font-weight: bold;
-  margin-right: 0.5rem;
+.feature-list li:last-child {
+  border-bottom: none;
+}
+
+.custom-text {
+  margin-top: 16px;
 }
 
 .custom-text p {
-  margin: 0;
   font-size: 14px;
-  opacity: 0.9;
-  transition: color 0.3s ease;
+  line-height: 1.6;
+  margin: 0;
 }
 
-@media (max-width: 480px) {
-  .login-card {
-    padding: 24px;
-    margin: 10px;
+@media (max-width: 640px) {
+  .login-container {
+    padding: 16px;
   }
   
-  .login-header h1 {
-    font-size: 24px;
+  .login-card {
+    max-width: none;
+  }
+  
+  .login-form {
+    padding: 0 16px;
+  }
+  
+  .login-header,
+  .login-footer {
+    padding: 16px;
   }
 }
 </style>
