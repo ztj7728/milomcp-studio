@@ -62,7 +62,7 @@
           </el-card>
         </el-tab-pane>
 
-        <el-tab-pane label="登录页面" name="login">
+        <el-tab-pane v-if="authStore.isAdmin" label="登录页面" name="login">
           <el-card>
             <template #header>
               <div class="card-header">

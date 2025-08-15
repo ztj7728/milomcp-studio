@@ -13,7 +13,7 @@
               <el-icon><Refresh /></el-icon>
               刷新工具
             </el-button>
-            <el-button @click="reloadAllTools" :loading="isLoading" type="primary">
+            <el-button v-if="authStore.isAdmin" @click="reloadAllTools" :loading="isLoading" type="primary">
               <el-icon><RefreshRight /></el-icon>
               重载所有工具
             </el-button>
@@ -248,7 +248,23 @@ const runTest = async () => {
   
   try {
     const { defaultClient } = await import('../api/client.js')
-    const response = await defaultClient.executeTool(selectedTool.value.name, testParameters.value)
+    
+    // Only send parameters if the tool actually has parameter definitions
+    let toolParams = {}
+    if (selectedTool.value.inputSchema?.properties && Object.keys(selectedTool.value.inputSchema.properties).length > 0) {
+      // Filter out empty string values for optional parameters
+      toolParams = Object.fromEntries(
+        Object.entries(testParameters.value).filter(([key, value]) => {
+          const paramDef = selectedTool.value.inputSchema.properties[key]
+          const isRequired = selectedTool.value.inputSchema?.required?.includes(key)
+          
+          // Include if required, or if not required but has non-empty value
+          return isRequired || (value !== '' && value !== null && value !== undefined)
+        })
+      )
+    }
+    
+    const response = await defaultClient.executeTool(selectedTool.value.name, toolParams)
     
     testResult.value = {
       success: true,

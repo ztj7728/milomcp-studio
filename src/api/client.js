@@ -167,10 +167,14 @@ export class MCPClient {
   async executeTool(toolName, parameters = {}) {
     try {
       // Use JSON-RPC 2.0 for tool execution
-      const response = await this.jsonRpc('tools/call', {
-        name: toolName,
-        arguments: parameters
-      })
+      const params = { name: toolName }
+      
+      // Only include arguments if there are any parameters to send
+      if (parameters && Object.keys(parameters).length > 0) {
+        params.arguments = parameters
+      }
+      
+      const response = await this.jsonRpc('tools/call', params)
       return response
     } catch (error) {
       throw this.handleError(error, `Failed to execute tool: ${toolName}`)
