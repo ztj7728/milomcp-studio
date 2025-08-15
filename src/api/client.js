@@ -95,6 +95,38 @@ export class MCPClient {
   }
   
   // ==========================================================================
+  // JSON-RPC 2.0 Support
+  // ==========================================================================
+  
+  /**
+   * Send a JSON-RPC 2.0 request
+   */
+  async jsonRpc(method, params = {}, id = null) {
+    try {
+      const requestId = id || Math.random().toString(36).substr(2, 9)
+      const payload = {
+        jsonrpc: '2.0',
+        method,
+        id: requestId
+      }
+      
+      if (Object.keys(params).length > 0) {
+        payload.params = params
+      }
+      
+      const response = await this.client.post('/jsonrpc', payload)
+      
+      if (response.data.error) {
+        throw new Error(response.data.error.message || 'JSON-RPC error')
+      }
+      
+      return response.data
+    } catch (error) {
+      throw this.handleError(error, `JSON-RPC call failed: ${method}`)
+    }
+  }
+
+  // ==========================================================================
   // Tools Management
   // ==========================================================================
   
@@ -103,8 +135,15 @@ export class MCPClient {
    */
   async getTools() {
     try {
-      const response = await this.client.get('/tools')
-      return response.data
+      // Try JSON-RPC first, fall back to REST API
+      try {
+        const response = await this.jsonRpc('tools/list')
+        return response
+      } catch (jsonRpcError) {
+        // Fall back to REST API
+        const response = await this.client.get('/tools')
+        return response.data
+      }
     } catch (error) {
       throw this.handleError(error, 'Failed to get tools list')
     }
@@ -127,10 +166,12 @@ export class MCPClient {
    */
   async executeTool(toolName, parameters = {}) {
     try {
-      const response = await this.client.post(`/tools/${encodeURIComponent(toolName)}/execute`, {
-        parameters
+      // Use JSON-RPC 2.0 for tool execution
+      const response = await this.jsonRpc('tools/call', {
+        name: toolName,
+        arguments: parameters
       })
-      return response.data
+      return response
     } catch (error) {
       throw this.handleError(error, `Failed to execute tool: ${toolName}`)
     }
@@ -153,7 +194,7 @@ export class MCPClient {
    */
   async reloadAllTools() {
     try {
-      const response = await this.client.post('/tools/reload')
+      const response = await this.client.post('/reload')
       return response.data
     } catch (error) {
       throw this.handleError(error, 'Failed to reload all tools')

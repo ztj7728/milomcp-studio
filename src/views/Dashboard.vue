@@ -1,24 +1,8 @@
 <template>
-  <el-container class="dashboard-layout">
-    <el-header class="dashboard-header">
-      <div class="header-left">
-        <h1 class="brand-title">MiloMCP Studio</h1>
-      </div>
-      <div class="header-nav">
-        <el-menu mode="horizontal" :default-active="$route.name" router>
-          <el-menu-item index="Dashboard">仪表板</el-menu-item>
-          <el-menu-item index="Tools">工具管理</el-menu-item>
-          <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
-          <el-menu-item index="Settings">设置</el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="handleLogout" size="small">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
-    </el-header>
-
-    <el-main class="dashboard-main">
+  <div>
+    <AppNavbar />
+    <el-container class="dashboard-layout">
+      <el-main class="dashboard-main">
       <div class="welcome-section">
         <h2>欢迎使用 MiloMCP Studio</h2>
         <p>高性能、优雅、轻量的 MiloMCP 管理平台</p>
@@ -143,15 +127,17 @@
         </el-col>
       </el-row>
     </el-main>
-  </el-container>
+    </el-container>
+  </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import AppNavbar from '../components/AppNavbar.vue'
 import { 
-  Tools, User, Connection, Monitor, Setting, SwitchButton, Refresh 
+  Tools, User, Connection, Monitor, Setting, Refresh 
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -227,11 +213,6 @@ const refreshStats = async () => {
   }
 }
 
-const handleLogout = async () => {
-  authStore.logout()
-  router.push({ name: 'Login' })
-}
-
 onMounted(async () => {
   await fetchStats()
   refreshInterval = setInterval(fetchStats, 30000)
@@ -246,29 +227,8 @@ onUnmounted(() => {
 
 <style scoped>
 .dashboard-layout {
-  height: 100vh;
-}
-
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color);
-}
-
-.header-left .brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--el-text-color-primary);
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
 }
 
 .dashboard-main {
@@ -404,17 +364,6 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
-  .dashboard-header {
-    flex-direction: column;
-    padding: 16px 24px;
-    gap: 16px;
-  }
-
-  .header-nav {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .dashboard-main {
     padding: 16px;
   }

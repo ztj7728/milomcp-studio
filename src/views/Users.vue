@@ -1,24 +1,7 @@
 <template>
   <div>
+    <AppNavbar />
     <el-container class="users-layout">
-    <el-header class="users-header">
-      <div class="header-left">
-        <h1 class="brand-title">MiloMCP Studio</h1>
-      </div>
-      <div class="header-nav">
-        <el-menu mode="horizontal" :default-active="$route.name" router>
-          <el-menu-item index="Dashboard">仪表板</el-menu-item>
-          <el-menu-item index="Tools">工具管理</el-menu-item>
-          <el-menu-item index="Users">用户管理</el-menu-item>
-          <el-menu-item index="Settings">设置</el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="handleLogout" size="small">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
-    </el-header>
-
     <el-main class="users-main">
         <div class="page-header">
           <div>
@@ -172,8 +155,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import AppNavbar from '../components/AppNavbar.vue'
 import Swal from 'sweetalert2'
-import { SwitchButton, Plus, Refresh, Search, DocumentCopy, Edit, Delete } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Refresh, Search, DocumentCopy, Edit, Delete } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -399,11 +384,6 @@ const saveUser = async () => {
   }
 }
 
-const handleLogout = () => {
-  authStore.logout()
-  router.push({ name: 'Login' })
-}
-
 // Initialize component
 onMounted(async () => {
   // Check admin access
@@ -419,34 +399,8 @@ onMounted(async () => {
 
 <style scoped>
 .users-layout {
-  min-height: 100vh;
-}
-
-.users-header {
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  margin: 0;
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
 }
 
 .users-main {
@@ -546,16 +500,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    height: auto;
-    padding: 10px;
-  }
-  
-  .navbar-menu {
-    margin: 10px 0;
-  }
-  
   .page-header {
     flex-direction: column;
     gap: 16px;

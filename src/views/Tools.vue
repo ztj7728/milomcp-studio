@@ -1,24 +1,7 @@
 <template>
   <div>
+    <AppNavbar />
     <el-container class="tools-layout">
-    <el-header class="tools-header">
-      <div class="header-left">
-        <h1 class="brand-title">MiloMCP Studio</h1>
-      </div>
-      <div class="header-nav">
-        <el-menu mode="horizontal" :default-active="$route.name" router>
-          <el-menu-item index="Dashboard">仪表板</el-menu-item>
-          <el-menu-item index="Tools">工具管理</el-menu-item>
-          <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
-          <el-menu-item index="Settings">设置</el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="handleLogout" size="small">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
-    </el-header>
-
     <el-main class="tools-main">
         <div class="page-header">
           <div>
@@ -38,46 +21,24 @@
         </div>
 
         <el-row :gutter="20" class="stats-row">
-          <el-col :xs="12" :sm="6">
+          <el-col :xs="24" :sm="12" :lg="6">
             <el-card class="stat-card">
               <div class="stat-content">
                 <div class="stat-icon">🛠️</div>
                 <div>
                   <div class="stat-number">{{ tools.length }}</div>
-                  <div class="stat-label">总工具数</div>
+                  <div class="stat-label">可用工具</div>
                 </div>
               </div>
             </el-card>
           </el-col>
-          <el-col :xs="12" :sm="6">
+          <el-col :xs="24" :sm="12" :lg="6">
             <el-card class="stat-card">
               <div class="stat-content">
-                <div class="stat-icon">✅</div>
+                <div class="stat-icon">📋</div>
                 <div>
-                  <div class="stat-number">{{ enabledTools }}</div>
-                  <div class="stat-label">已启用</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon">📊</div>
-                <div>
-                  <div class="stat-number">{{ totalCalls }}</div>
-                  <div class="stat-label">总调用次数</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-          <el-col :xs="12" :sm="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon">⚡</div>
-                <div>
-                  <div class="stat-number">{{ avgResponseTime }}ms</div>
-                  <div class="stat-label">平均响应时间</div>
+                  <div class="stat-number">{{ totalParams }}</div>
+                  <div class="stat-label">参数总数</div>
                 </div>
               </div>
             </el-card>
@@ -93,34 +54,23 @@
                     <h3>{{ tool.name }}</h3>
                     <p>{{ tool.description }}</p>
                   </div>
-                  <el-tag :type="tool.enabled ? 'success' : 'danger'">
-                    {{ tool.enabled ? '已启用' : '已禁用' }}
-                  </el-tag>
+                  <el-tag type="success">可用</el-tag>
                 </div>
               </template>
-
-              <div class="tool-details">
-                <el-descriptions :column="1" size="small">
-                  <el-descriptions-item label="类别">{{ tool.category }}</el-descriptions-item>
-                  <el-descriptions-item label="版本">{{ tool.version }}</el-descriptions-item>
-                  <el-descriptions-item label="调用次数">{{ tool.callCount }}</el-descriptions-item>
-                  <el-descriptions-item label="平均响应">{{ tool.avgResponseTime }}ms</el-descriptions-item>
-                </el-descriptions>
-              </div>
 
               <div class="tool-schema">
                 <h4>输入参数</h4>
                 <div class="schema-list">
                   <el-tag
-                    v-for="param in tool.inputSchema?.properties"
-                    :key="param.name"
+                    v-for="(param, key) in tool.inputSchema?.properties"
+                    :key="key"
                     size="small"
                     class="param-tag"
                   >
-                    {{ param.name }} ({{ param.type }})
-                    <el-icon v-if="param.required" color="#f56c6c"><StarFilled /></el-icon>
+                    {{ key }} ({{ param.type }})
+                    <el-icon v-if="tool.inputSchema?.required?.includes(key)" color="#f56c6c"><StarFilled /></el-icon>
                   </el-tag>
-                  <div v-if="!tool.inputSchema?.properties?.length" class="empty-schema">
+                  <div v-if="!tool.inputSchema?.properties || Object.keys(tool.inputSchema.properties).length === 0" class="empty-schema">
                     无参数
                   </div>
                 </div>
@@ -129,15 +79,6 @@
               <template #footer>
                 <div class="tool-actions">
                   <el-button @click="testTool(tool)" size="small" type="primary">测试工具</el-button>
-                  <el-button @click="reloadTool(tool)" size="small">重载</el-button>
-                  <el-button 
-                    @click="toggleTool(tool)" 
-                    size="small"
-                    :type="tool.enabled ? 'danger' : 'success'"
-                  >
-                    {{ tool.enabled ? '禁用' : '启用' }}
-                  </el-button>
-                  <el-button @click="showToolLogs(tool)" size="small">查看日志</el-button>
                 </div>
               </template>
             </el-card>
@@ -157,13 +98,38 @@
       width="600px"
     >
       <el-form label-position="top">
-        <el-form-item label="输入参数 (JSON)">
+        <el-form-item
+          v-for="(param, key) in selectedTool?.inputSchema?.properties"
+          :key="key"
+          :label="`${key} (${param.type})`"
+          :required="selectedTool?.inputSchema?.required?.includes(key)"
+        >
           <el-input
-            v-model="testInput"
-            type="textarea"
-            :rows="6"
-            placeholder="请输入 JSON 格式的参数..."
+            v-if="param.type === 'string'"
+            v-model="testParameters[key]"
+            :placeholder="param.description || `请输入${key}`"
+            :type="key.includes('password') ? 'password' : 'text'"
           />
+          <el-input-number
+            v-else-if="param.type === 'number'"
+            v-model="testParameters[key]"
+            :placeholder="param.description || `请输入${key}`"
+            style="width: 100%"
+          />
+          <el-switch
+            v-else-if="param.type === 'boolean'"
+            v-model="testParameters[key]"
+          />
+          <el-input
+            v-else
+            v-model="testParameters[key]"
+            type="textarea"
+            :rows="3"
+            :placeholder="param.description || `请输入${key} (${param.type})`"
+          />
+          <div v-if="param.description" class="param-description">
+            {{ param.description }}
+          </div>
         </el-form-item>
       </el-form>
       
@@ -173,13 +139,12 @@
           <el-tag :type="testResult.success ? 'success' : 'danger'">
             {{ testResult.success ? '成功' : '失败' }}
           </el-tag>
-          <span class="response-time">响应时间: {{ testResult.responseTime }}ms</span>
         </div>
         <el-input
-          :model-value="JSON.stringify(testResult.data, null, 2)"
+          :model-value="typeof testResult.data === 'string' ? testResult.data : JSON.stringify(testResult.data, null, 2)"
           type="textarea"
           readonly
-          :rows="10"
+          :rows="8"
           class="result-content"
         />
       </div>
@@ -191,32 +156,6 @@
         </el-button>
       </template>
     </el-dialog>
-
-    <!-- Tool Logs Modal -->
-    <el-dialog
-      v-model="showLogsModal"
-      :title="`工具日志: ${selectedTool?.name}`"
-      width="800px"
-    >
-      <div class="logs-header">
-        <el-select v-model="logLevel" placeholder="选择日志级别">
-          <el-option label="所有级别" value="all" />
-          <el-option label="信息" value="info" />
-          <el-option label="警告" value="warn" />
-          <el-option label="错误" value="error" />
-        </el-select>
-        <el-button @click="refreshLogs" size="small">刷新日志</el-button>
-      </div>
-
-      <div class="logs-content">
-        <div v-for="log in filteredLogs" :key="log.id" class="log-entry">
-          <el-tag :type="getLogType(log.level)" size="small">{{ log.level.toUpperCase() }}</el-tag>
-          <span class="log-timestamp">{{ formatTimestamp(log.timestamp) }}</span>
-          <span class="log-message">{{ log.message }}</span>
-        </div>
-        <el-empty v-if="filteredLogs.length === 0" description="暂无日志记录" />
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -224,7 +163,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-import { SwitchButton, Refresh, RefreshRight, StarFilled } from '@element-plus/icons-vue'
+import AppNavbar from '../components/AppNavbar.vue'
+import { ElMessage } from 'element-plus'
+import { Refresh, RefreshRight, StarFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -232,180 +173,72 @@ const authStore = useAuthStore()
 const isLoading = ref(false)
 const isTestRunning = ref(false)
 const showTestModal = ref(false)
-const showLogsModal = ref(false)
 const selectedTool = ref(null)
-const testInput = ref('{}')
+const testParameters = ref({})
 const testResult = ref(null)
-const logLevel = ref('all')
 
-const tools = ref([
-  {
-    name: 'calculator',
-    description: '基础数学计算工具',
-    category: 'utility',
-    version: '1.0.0',
-    enabled: true,
-    callCount: 156,
-    avgResponseTime: 12,
-    inputSchema: {
-      properties: [
-        { name: 'expression', type: 'string', required: true },
-        { name: 'precision', type: 'number', required: false }
-      ]
-    }
-  },
-  {
-    name: 'text-processor',
-    description: '文本处理和分析工具',
-    category: 'text',
-    version: '1.2.1',
-    enabled: true,
-    callCount: 89,
-    avgResponseTime: 45,
-    inputSchema: {
-      properties: [
-        { name: 'text', type: 'string', required: true },
-        { name: 'operation', type: 'string', required: true },
-        { name: 'options', type: 'object', required: false }
-      ]
-    }
-  },
-  {
-    name: 'uuid-generator',
-    description: 'UUID 生成器工具',
-    category: 'utility',
-    version: '1.0.0',
-    enabled: true,
-    callCount: 203,
-    avgResponseTime: 8,
-    inputSchema: {
-      properties: [
-        { name: 'version', type: 'number', required: false },
-        { name: 'count', type: 'number', required: false }
-      ]
-    }
-  },
-  {
-    name: 'timestamp',
-    description: '时间戳处理工具',
-    category: 'datetime',
-    version: '1.1.0',
-    enabled: true,
-    callCount: 34,
-    avgResponseTime: 15,
-    inputSchema: {
-      properties: [
-        { name: 'format', type: 'string', required: false },
-        { name: 'timezone', type: 'string', required: false }
-      ]
-    }
-  },
-  {
-    name: 'weather',
-    description: '天气信息查询工具',
-    category: 'api',
-    version: '2.0.0',
-    enabled: true,
-    callCount: 67,
-    avgResponseTime: 128,
-    inputSchema: {
-      properties: [
-        { name: 'location', type: 'string', required: true },
-        { name: 'units', type: 'string', required: false }
-      ]
-    }
-  }
-])
+const tools = ref([])
 
-const toolLogs = ref([
-  {
-    id: 1,
-    tool: 'calculator',
-    level: 'info',
-    message: '计算表达式: 2 + 2 = 4',
-    timestamp: new Date(Date.now() - 300000)
-  },
-  {
-    id: 2,
-    tool: 'text-processor',
-    level: 'info',
-    message: '处理文本长度: 256 字符',
-    timestamp: new Date(Date.now() - 600000)
-  },
-  {
-    id: 3,
-    tool: 'weather',
-    level: 'warn',
-    message: 'API 响应时间较慢: 1250ms',
-    timestamp: new Date(Date.now() - 900000)
-  },
-  {
-    id: 4,
-    tool: 'timestamp',
-    level: 'error',
-    message: '无效的时区参数: invalid/timezone',
-    timestamp: new Date(Date.now() - 1200000)
-  }
-])
-
-const enabledTools = computed(() => tools.value.filter(tool => tool.enabled).length)
-const totalCalls = computed(() => tools.value.reduce((sum, tool) => sum + tool.callCount, 0))
-const avgResponseTime = computed(() => {
-  const total = tools.value.reduce((sum, tool) => sum + (tool.avgResponseTime * tool.callCount), 0)
-  return Math.round(total / totalCalls.value) || 0
+const totalParams = computed(() => {
+  return tools.value.reduce((sum, tool) => {
+    const props = tool.inputSchema?.properties
+    return sum + (props ? Object.keys(props).length : 0)
+  }, 0)
 })
-
-const filteredLogs = computed(() => {
-  let logs = toolLogs.value
-  if (selectedTool.value) {
-    logs = logs.filter(log => log.tool === selectedTool.value.name)
-  }
-  if (logLevel.value !== 'all') {
-    logs = logs.filter(log => log.level === logLevel.value)
-  }
-  return logs.sort((a, b) => b.timestamp - a.timestamp)
-})
-
-const getLogType = (level) => {
-  switch (level) {
-    case 'error': return 'danger'
-    case 'warn': return 'warning'
-    default: return 'info'
-  }
-}
-
-const formatTimestamp = (timestamp) => {
-  return new Date(timestamp).toLocaleString('zh-CN')
-}
 
 const refreshTools = async () => {
   isLoading.value = true
-  setTimeout(() => {
+  try {
+    const { defaultClient } = await import('../api/client.js')
+    const response = await defaultClient.getTools()
+    
+    if (response && response.result && response.result.tools) {
+      tools.value = response.result.tools
+    } else {
+      tools.value = []
+    }
+  } catch (error) {
+    console.error('Failed to fetch tools:', error)
+    ElMessage.error('获取工具列表失败: ' + (error.message || '未知错误'))
+  } finally {
     isLoading.value = false
-  }, 1000)
+  }
 }
 
 const reloadAllTools = async () => {
   isLoading.value = true
-  setTimeout(() => {
-    isLoading.value = false
+  try {
+    const { defaultClient } = await import('../api/client.js')
+    await defaultClient.reloadAllTools()
     ElMessage.success('所有工具已成功重载')
-  }, 2000)
-}
-
-const reloadTool = async (tool) => {
-  ElMessage.success(`工具 "${tool.name}" 已重载`)
-}
-
-const toggleTool = (tool) => {
-  tool.enabled = !tool.enabled
-  const status = tool.enabled ? '启用' : '禁用'
-  ElMessage.success(`工具 "${tool.name}" 已${status}`)
+    // Refresh tools list after reload
+    await refreshTools()
+  } catch (error) {
+    console.error('Failed to reload tools:', error)
+    ElMessage.error('重载工具失败: ' + (error.message || '未知错误'))
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const testTool = (tool) => {
   selectedTool.value = tool
-  testInput.value = JSON.stringify({}, null, 2)
+  testParameters.value = {}
+  
+  // Initialize test parameters with default values
+  if (tool.inputSchema?.properties) {
+    Object.keys(tool.inputSchema.properties).forEach(key => {
+      const param = tool.inputSchema.properties[key]
+      if (param.type === 'boolean') {
+        testParameters.value[key] = false
+      } else if (param.type === 'number') {
+        testParameters.value[key] = 0
+      } else {
+        testParameters.value[key] = ''
+      }
+    })
+  }
+  
   testResult.value = null
   showTestModal.value = true
 }
@@ -414,57 +247,36 @@ const runTest = async () => {
   isTestRunning.value = true
   
   try {
-    const input = JSON.parse(testInput.value)
-    
-    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000))
-    
-    const success = Math.random() > 0.2
-    const responseTime = Math.round(50 + Math.random() * 200)
+    const { defaultClient } = await import('../api/client.js')
+    const response = await defaultClient.executeTool(selectedTool.value.name, testParameters.value)
     
     testResult.value = {
-      success,
-      responseTime,
-      data: success 
-        ? { result: `Test result for ${selectedTool.value.name}`, input }
-        : { error: 'Tool execution failed', code: 'EXECUTION_ERROR' }
+      success: true,
+      data: response.result || response
     }
     
-    selectedTool.value.callCount++
-    selectedTool.value.avgResponseTime = Math.round(
-      (selectedTool.value.avgResponseTime * (selectedTool.value.callCount - 1) + responseTime) / selectedTool.value.callCount
-    )
+    ElMessage.success('工具测试成功')
     
   } catch (error) {
+    console.error('Failed to test tool:', error)
     testResult.value = {
       success: false,
-      responseTime: 0,
-      data: { error: 'Invalid JSON input', message: error.message }
+      data: {
+        error: error.message || '工具执行失败',
+        details: error.response?.data || error
+      }
     }
+    ElMessage.error('工具测试失败: ' + (error.message || '未知错误'))
   } finally {
     isTestRunning.value = false
   }
 }
 
-const showToolLogs = (tool) => {
-  selectedTool.value = tool
-  logLevel.value = 'all'
-  showLogsModal.value = true
-}
-
-const refreshLogs = () => {
-  ElMessage.success('日志已刷新')
-}
-
 const closeTestModal = () => {
   showTestModal.value = false
   selectedTool.value = null
-  testInput.value = '{}'
+  testParameters.value = {}
   testResult.value = null
-}
-
-const handleLogout = () => {
-  authStore.logout()
-  router.push({ name: 'Login' })
 }
 
 onMounted(() => {
@@ -474,34 +286,8 @@ onMounted(() => {
 
 <style scoped>
 .tools-layout {
-  min-height: 100vh;
-}
-
-.tools-header {
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color-lighter);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 24px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--el-text-color-primary);
-  margin: 0;
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
 }
 
 .tools-main {
@@ -602,6 +388,13 @@ onMounted(() => {
   margin: 2px 4px 2px 0;
 }
 
+.param-description {
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 .empty-schema {
   color: var(--el-text-color-placeholder);
   font-size: 12px;
@@ -637,54 +430,7 @@ onMounted(() => {
   color: var(--el-text-color-regular);
 }
 
-.logs-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.logs-content {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.log-entry {
-  padding: 8px 0;
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  font-size: 14px;
-  border-bottom: 1px solid var(--el-border-color-lighter);
-}
-
-.log-entry:last-child {
-  border-bottom: none;
-}
-
-.log-timestamp {
-  color: var(--el-text-color-secondary);
-  flex-shrink: 0;
-  width: 120px;
-  font-size: 12px;
-}
-
-.log-message {
-  flex: 1;
-  color: var(--el-text-color-primary);
-}
-
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    height: auto;
-    padding: 10px;
-  }
-  
-  .navbar-menu {
-    margin: 10px 0;
-  }
-  
   .page-header {
     flex-direction: column;
     gap: 16px;

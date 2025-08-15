@@ -1,23 +1,7 @@
 <template>
-  <el-container class="settings-layout">
-    <el-header class="settings-header">
-      <div class="header-left">
-        <h1 class="brand-title">MiloMCP Studio</h1>
-      </div>
-      <div class="header-nav">
-        <el-menu mode="horizontal" :default-active="$route.name" router>
-          <el-menu-item index="Dashboard">仪表板</el-menu-item>
-          <el-menu-item index="Tools">工具管理</el-menu-item>
-          <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
-          <el-menu-item index="Settings">设置</el-menu-item>
-        </el-menu>
-        <el-button type="primary" @click="handleLogout" size="small">
-          <el-icon><SwitchButton /></el-icon>
-          退出登录
-        </el-button>
-      </div>
-    </el-header>
-
+  <div>
+    <AppNavbar />
+    <el-container class="settings-layout">
     <el-main class="settings-main">
       <div class="page-header">
         <div>
@@ -205,7 +189,8 @@
         </el-tab-pane>
       </el-tabs>
     </el-main>
-  </el-container>
+    </el-container>
+  </div>
 </template>
 
 <script setup>
@@ -213,8 +198,9 @@ import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { useUIStore } from '../stores/ui.js'
+import AppNavbar from '../components/AppNavbar.vue'
 import { 
-  SwitchButton, Brush, Sunny, Moon, Monitor, Check, Close, User, Plus, 
+  Brush, Sunny, Moon, Monitor, Check, Close, User, Plus, 
   Refresh, InfoFilled 
 } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
@@ -305,11 +291,6 @@ const getBrowser = () => {
   return '未知'
 }
 
-const handleLogout = () => {
-  authStore.logout()
-  router.push({ name: 'Login' })
-}
-
 onMounted(() => {
   currentThemeSelection.value = uiStore.theme
 })
@@ -317,29 +298,8 @@ onMounted(() => {
 
 <style scoped>
 .settings-layout {
-  height: 100vh;
-}
-
-.settings-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 24px;
-  background: var(--el-bg-color);
-  border-bottom: 1px solid var(--el-border-color);
-}
-
-.header-left .brand-title {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0;
-  color: var(--el-text-color-primary);
-}
-
-.header-nav {
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  margin-top: 60px;
+  min-height: calc(100vh - 60px);
 }
 
 .settings-main {

@@ -80,4 +80,40 @@ html, body {
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
+
+/* Global modal styling for consistency */
+.el-dialog {
+  border-radius: var(--el-border-radius-base);
+}
+
+.el-dialog__header {
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  padding: 20px;
+}
+
+.el-dialog__body {
+  padding: 20px;
+}
+
+.el-dialog__footer {
+  border-top: 1px solid var(--el-border-color-lighter);
+  padding: 16px 20px;
+}
+
+/* Form styling */
+.form-text {
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* Card header styling */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 16px;
+}
 </style>
