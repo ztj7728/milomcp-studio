@@ -1,139 +1,134 @@
 <template>
   <div>
-    <AppNavbar />
-    <el-container class="dashboard-layout">
-      <el-main class="dashboard-main">
-      <div class="welcome-section">
-        <h2>欢迎使用 MiloMCP Studio</h2>
-        <p>高性能、优雅、轻量的 MiloMCP 管理平台</p>
-      </div>
+    <div class="welcome-section">
+      <h2>欢迎使用 MiloMCP Studio</h2>
+      <p>高性能、优雅、轻量的 MiloMCP 管理平台</p>
+    </div>
 
-      <el-row :gutter="24" class="stats-section">
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon tools">
-                <el-icon size="24"><Tools /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ stats.toolsCount }}</div>
-                <div class="stat-label">工具总数</div>
-              </div>
+    <el-row :gutter="24" class="stats-section">
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon tools">
+              <el-icon size="24"><Tools /></el-icon>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon users">
-                <el-icon size="24"><User /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ stats.usersCount }}</div>
-                <div class="stat-label">用户总数</div>
-              </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.toolsCount }}</div>
+              <div class="stat-label">工具总数</div>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon connections">
-                <el-icon size="24"><Connection /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ stats.connectionsCount }}</div>
-                <div class="stat-label">活跃连接</div>
-              </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon users">
+              <el-icon size="24"><User /></el-icon>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :sm="12" :lg="6">
-          <el-card shadow="hover" class="stat-card">
-            <div class="stat-content">
-              <div class="stat-icon server" :class="{ offline: serverStatus === '离线' }">
-                <el-icon size="24"><Monitor /></el-icon>
-              </div>
-              <div class="stat-info">
-                <div class="stat-number">{{ serverStatus }}</div>
-                <div class="stat-label">服务状态</div>
-              </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.usersCount }}</div>
+              <div class="stat-label">用户总数</div>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon connections">
+              <el-icon size="24"><Connection /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ stats.connectionsCount }}</div>
+              <div class="stat-label">活跃连接</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card shadow="hover" class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon server" :class="{ offline: serverStatus === '离线' }">
+              <el-icon size="24"><Monitor /></el-icon>
+            </div>
+            <div class="stat-info">
+              <div class="stat-number">{{ serverStatus }}</div>
+              <div class="stat-label">服务状态</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-      <el-row :gutter="24" class="content-section">
-        <el-col :xs="24" :lg="12">
-          <el-card>
-            <template #header>
-              <div class="card-header">
-                <span>服务器信息</span>
-                <el-icon><Monitor /></el-icon>
-              </div>
-            </template>
-            <div class="info-list">
-              <div class="info-item">
-                <span class="label">服务器地址</span>
-                <span class="value">{{ serverInfo.url }}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">运行时间</span>
-                <span class="value">{{ serverInfo.uptime }}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">版本信息</span>
-                <span class="value">{{ serverInfo.version }}</span>
-              </div>
-              <div class="info-item">
-                <span class="label">认证状态</span>
-                <el-tag 
-                  :type="authStore.isAuthenticated ? 'success' : 'danger'"
-                  size="small"
-                >
-                  {{ authStore.isAuthenticated ? '已认证' : '未认证' }}
-                </el-tag>
-              </div>
+    <el-row :gutter="24" class="content-section">
+      <el-col :xs="24" :lg="12">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <span>服务器信息</span>
+              <el-icon><Monitor /></el-icon>
             </div>
-          </el-card>
-        </el-col>
-        <el-col :xs="24" :lg="12">
-          <el-card>
-            <template #header>
-              <div class="card-header">
-                <span>MCP 客户端配置</span>
-                <el-icon><Document /></el-icon>
-              </div>
-            </template>
-            <div class="mcp-config-content">
-              <p class="config-description">
-                复制以下 JSON 配置以在 MCP 客户端中使用，推荐使用Cherry-Studio-1.5.6+。
-              </p>
-              <div class="config-options">
-                <el-radio-group v-model="configType" size="small">
-                  <el-radio-button label="sse">SSE</el-radio-button>
-                  <el-radio-button label="streamableHttp">StreamableHttp</el-radio-button>
-                </el-radio-group>
-              </div>
-              <div class="config-json-container">
-                <pre class="config-json">{{ formattedConfig }}</pre>
-                <el-button 
-                  type="primary" 
-                  size="small" 
-                  class="copy-button"
-                  @click="copyConfig"
-                  :loading="isCopying"
-                >
-                  <el-icon><DocumentCopy /></el-icon>
-                  {{ copyButtonText }}
-                </el-button>
-              </div>
+          </template>
+          <div class="info-list">
+            <div class="info-item">
+              <span class="label">服务器地址</span>
+              <span class="value">{{ serverInfo.url }}</span>
             </div>
-          </el-card>
-        </el-col>
-      </el-row>
-    </el-main>
-    </el-container>
+            <div class="info-item">
+              <span class="label">运行时间</span>
+              <span class="value">{{ serverInfo.uptime }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">版本信息</span>
+              <span class="value">{{ serverInfo.version }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">认证状态</span>
+              <el-tag
+                :type="authStore.isAuthenticated ? 'success' : 'danger'"
+                size="small"
+              >
+                {{ authStore.isAuthenticated ? '已认证' : '未认证' }}
+              </el-tag>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :lg="12">
+        <el-card>
+          <template #header>
+            <div class="card-header">
+              <span>MCP 客户端配置</span>
+              <el-icon><Document /></el-icon>
+            </div>
+          </template>
+          <div class="mcp-config-content">
+            <p class="config-description">
+              复制以下 JSON 配置以在 MCP 客户端中使用，推荐使用Cherry-Studio-1.5.6+。
+            </p>
+            <div class="config-options">
+              <el-radio-group v-model="configType" size="small">
+                <el-radio-button label="sse">SSE</el-radio-button>
+                <el-radio-button label="streamableHttp">StreamableHttp</el-radio-button>
+              </el-radio-group>
+            </div>
+            <div class="config-json-container">
+              <pre class="config-json">{{ formattedConfig }}</pre>
+              <el-button
+                type="primary"
+                size="small"
+                class="copy-button"
+                @click="copyConfig"
+                :loading="isCopying"
+              >
+                <el-icon><DocumentCopy /></el-icon>
+                {{ copyButtonText }}
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -141,10 +136,9 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-import AppNavbar from '../components/AppNavbar.vue'
 import { ElMessage } from 'element-plus'
-import { 
-  Tools, User, Connection, Monitor, Document, DocumentCopy 
+import {
+  Tools, User, Connection, Monitor, Document, DocumentCopy
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -293,17 +287,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.dashboard-layout {
-  margin-top: 64px;
-  min-height: calc(100vh - 64px);
-}
-
-.dashboard-main {
-  padding: 32px;
-  background: var(--app-bg-color);
-  min-height: calc(100vh - 64px);
-}
-
 .welcome-section {
   text-align: center;
   margin-bottom: 40px;

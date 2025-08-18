@@ -117,7 +117,8 @@ onUnmounted(() => {
   background: var(--navbar-bg-color);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--el-border-color-lighter);
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-container {

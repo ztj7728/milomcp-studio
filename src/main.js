@@ -7,13 +7,10 @@ import './styles/theme.css' // Import the centralized theme file
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import Login from './views/Login.vue'
+import MainLayout from './layouts/MainLayout.vue'
 
 // Create router
 const routes = [
-  {
-    path: '/',
-    redirect: '/login'
-  },
   {
     path: '/login',
     name: 'Login',
@@ -21,28 +18,33 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('./views/Dashboard.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/users',
-    name: 'Users',
-    component: () => import('./views/Users.vue'),
-    meta: { requiresAuth: true, requiresAdmin: true }
-  },
-  {
-    path: '/tools',
-    name: 'Tools',
-    component: () => import('./views/Tools.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/settings',
-    name: 'Settings',
-    component: () => import('./views/Settings.vue'),
-    meta: { requiresAuth: true }
+    path: '/',
+    component: MainLayout,
+    redirect: '/dashboard',
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('./views/Dashboard.vue'),
+      },
+      {
+        path: 'users',
+        name: 'Users',
+        component: () => import('./views/Users.vue'),
+        meta: { requiresAdmin: true }
+      },
+      {
+        path: 'tools',
+        name: 'Tools',
+        component: () => import('./views/Tools.vue'),
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('./views/Settings.vue'),
+      }
+    ]
   }
 ]
 
