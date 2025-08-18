@@ -260,19 +260,72 @@ onMounted(() => {
 @media (max-width: 640px) {
   .login-container {
     padding: 16px;
+    min-height: 100vh;
+    align-items: flex-start;
+    padding-top: 40px;
   }
   
   .login-card {
     max-width: none;
+    width: 100%;
+  }
+  
+  .login-header {
+    margin-bottom: 24px;
+    padding: 16px;
+  }
+  
+  .login-header h1 {
+    font-size: 24px;
+  }
+  
+  .login-header p {
+    font-size: 14px;
+  }
+  
+  .logo-placeholder {
+    font-size: 36px;
+    margin-bottom: 12px;
   }
   
   .login-form {
     padding: 0 16px;
   }
   
-  .login-header,
+  .form-hint {
+    font-size: 11px;
+  }
+  
+  .login-button {
+    height: 44px;
+    font-size: 15px;
+  }
+  
   .login-footer {
+    margin-top: 24px;
     padding: 16px;
+  }
+  
+  .feature-list h3 {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .feature-list li {
+    font-size: 13px;
+    padding: 6px 0;
+  }
+  
+  .custom-text p {
+    font-size: 13px;
+  }
+  
+  :deep(.el-input__inner) {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
   }
 }
 </style>

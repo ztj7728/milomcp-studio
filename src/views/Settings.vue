@@ -194,7 +194,7 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import { useUIStore } from '../stores/ui.js'
@@ -298,13 +298,14 @@ onMounted(() => {
 
 <style scoped>
 .settings-layout {
-  margin-top: 60px;
-  min-height: calc(100vh - 60px);
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
 }
 
 .settings-main {
-  padding: 24px;
-  background: var(--el-bg-color-page);
+  padding: 32px;
+  background: var(--app-bg-color);
+  min-height: calc(100vh - 64px);
 }
 
 .page-header {
@@ -328,6 +329,22 @@ onMounted(() => {
   background: transparent;
 }
 
+/* Card styling */
+.settings-main .el-card {
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  margin-bottom: 24px;
+}
+
+.settings-main .el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
@@ -342,28 +359,91 @@ onMounted(() => {
   align-items: center;
 }
 
-.feature-tag {
-  margin: 4px 0;
-}
-
 .feature-input {
   width: 200px;
 }
 
 @media (max-width: 768px) {
-  .settings-header {
-    flex-direction: column;
-    padding: 16px 24px;
-    gap: 16px;
-  }
-
-  .header-nav {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .settings-main {
     padding: 16px;
+  }
+  
+  .page-header h2 {
+    font-size: 20px;
+  }
+  
+  .page-header p {
+    font-size: 13px;
+  }
+  
+  .settings-tabs {
+    margin-top: 8px;
+  }
+  
+  :deep(.el-tabs__nav-wrap) {
+    padding: 0 8px;
+  }
+  
+  :deep(.el-tabs__item) {
+    font-size: 14px;
+    padding: 0 12px;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  :deep(.el-form-item__label) {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  :deep(.el-radio) {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-right: 16px;
+    margin-bottom: 8px;
+  }
+  
+  :deep(.el-radio__label) {
+    padding-left: 8px;
+    font-size: 13px;
+  }
+  
+  .feature-editor {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .feature-tag {
+    align-self: flex-start;
+  }
+  
+  .feature-input {
+    width: 100%;
+  }
+  
+  :deep(.el-descriptions) {
+    font-size: 13px;
+  }
+  
+  :deep(.el-descriptions__label) {
+    font-size: 12px;
+  }
+  
+  :deep(.el-descriptions__content) {
+    font-size: 12px;
+  }
+  
+  :deep(.el-form-item) {
+    margin-bottom: 16px;
+  }
+  
+  :deep(.el-button) {
+    font-size: 13px;
   }
 }
 </style>

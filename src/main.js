@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
+import './styles/theme.css' // Import the centralized theme file
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import Login from './views/Login.vue'

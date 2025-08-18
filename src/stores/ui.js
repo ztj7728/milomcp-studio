@@ -2,11 +2,11 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 
 export const useUIStore = defineStore('ui', () => {
-  // 主题设置
-  const theme = ref('light')
+  // 'light', 'dark', or 'auto'
+  const theme = ref('auto')
   const previewTheme = ref(null)
   const systemTheme = ref('light')
-  
+
   // Login界面自定义设置
   const loginCustomization = ref({
     header: {
@@ -20,7 +20,7 @@ export const useUIStore = defineStore('ui', () => {
       showFeatures: true,
       features: [
         '🔐 安全的 JWT Token 认证',
-        '👥 用户管理和权限控制', 
+        '👥 用户管理和权限控制',
         '🛠️ 工具管理和实时重载',
         '📡 多协议通信支持',
         '⚡ 高性能实时监控'
@@ -37,86 +37,51 @@ export const useUIStore = defineStore('ui', () => {
     }
   })
 
-  // 简化的主题预设
-  const themes = ref({
-    light: {
-      name: '浅色主题',
-      isDark: false
-    },
-    dark: {
-      name: '深色主题',
-      isDark: true
-    },
-    auto: {
-      name: '跟随系统',
-      isDark: null // Will be determined by system
-    }
-  })
-
-  // 计算当前主题
-  const currentTheme = computed(() => {
-    const activeTheme = theme.value
-    if (activeTheme === 'auto') {
-      return themes.value[systemTheme.value] || themes.value.light
-    }
-    return themes.value[activeTheme] || themes.value.light
-  })
-
-  // 计算预览主题
-  const currentPreviewTheme = computed(() => {
+  const isDark = computed(() => {
     const activeTheme = previewTheme.value || theme.value
     if (activeTheme === 'auto') {
-      return themes.value[systemTheme.value] || themes.value.light
+      return systemTheme.value === 'dark'
     }
-    return themes.value[activeTheme] || themes.value.light
+    return activeTheme === 'dark'
   })
 
-  // 检测系统主题
+  const applyTheme = (isDarkValue) => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', isDarkValue)
+    }
+  }
+
   const detectSystemTheme = () => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)')
       systemTheme.value = darkModeQuery.matches ? 'dark' : 'light'
       
-      // 监听系统主题变化
       darkModeQuery.addEventListener('change', (e) => {
         systemTheme.value = e.matches ? 'dark' : 'light'
       })
     }
   }
 
-  // 应用主题到HTML元素
-  const applyTheme = () => {
-    if (typeof document !== 'undefined') {
-      const html = document.documentElement
-      const activeTheme = theme.value
-      const resolvedTheme = activeTheme === 'auto' ? systemTheme.value : activeTheme
-      
-      // Remove existing theme classes
-      html.classList.remove('theme-light', 'theme-dark')
-      
-      // Add current theme class
-      html.classList.add(`theme-${resolvedTheme}`)
-    }
-  }
+  watch(isDark, (newValue) => {
+    applyTheme(newValue)
+  }, { immediate: true })
 
-  // 监听主题变化
-  watch([theme, systemTheme], applyTheme, { immediate: true })
-
-  // 预览主题（不保存）
   const previewThemeChange = (newTheme) => {
     previewTheme.value = newTheme
+    const isPreviewingDark = newTheme === 'auto' ? systemTheme.value === 'dark' : newTheme === 'dark'
+    applyTheme(isPreviewingDark)
   }
 
-  // 确认并应用主题（保存）
   const setTheme = (newTheme) => {
     theme.value = newTheme
     previewTheme.value = null
+    applyTheme(isDark.value)
     saveToLocalStorage()
   }
 
-  // 取消预览
   const cancelPreview = () => {
     previewTheme.value = null
+    applyTheme(isDark.value)
   }
 
   // 更新Login自定义设置
@@ -160,7 +125,6 @@ export const useUIStore = defineStore('ui', () => {
     saveToLocalStorage()
   }
 
-  // 保存到本地存储
   const saveToLocalStorage = () => {
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('milomcp_ui_settings', JSON.stringify({
@@ -170,7 +134,6 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
-  // 从本地存储加载
   const loadFromLocalStorage = () => {
     if (typeof localStorage !== 'undefined') {
       try {
@@ -190,26 +153,18 @@ export const useUIStore = defineStore('ui', () => {
     }
   }
 
-  // 初始化
   const init = () => {
     detectSystemTheme()
     loadFromLocalStorage()
-    applyTheme()
+    applyTheme(isDark.value)
   }
 
   return {
-    // 状态
     theme,
     previewTheme,
     systemTheme,
     loginCustomization,
-    themes,
-    
-    // 计算属性
-    currentTheme,
-    currentPreviewTheme,
-    
-    // 方法
+    isDark,
     setTheme,
     previewThemeChange,
     cancelPreview,

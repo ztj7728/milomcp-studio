@@ -101,27 +101,33 @@
           <el-card>
             <template #header>
               <div class="card-header">
-                <span>快速操作</span>
-                <el-icon><Setting /></el-icon>
+                <span>MCP 客户端配置</span>
+                <el-icon><Document /></el-icon>
               </div>
             </template>
-            <div class="action-buttons">
-              <el-button type="primary" @click="$router.push('/tools')">
-                <el-icon><Tools /></el-icon>
-                管理工具
-              </el-button>
-              <el-button v-if="authStore.isAdmin" type="primary" @click="$router.push('/users')">
-                <el-icon><User /></el-icon>
-                管理用户
-              </el-button>
-              <el-button @click="$router.push('/settings')">
-                <el-icon><Setting /></el-icon>
-                系统设置
-              </el-button>
-              <el-button @click="refreshStats" :loading="isLoading">
-                <el-icon><Refresh /></el-icon>
-                刷新数据
-              </el-button>
+            <div class="mcp-config-content">
+              <p class="config-description">
+                复制以下 JSON 配置以在 MCP 客户端中使用，推荐使用Cherry-Studio-1.5.6+。
+              </p>
+              <div class="config-options">
+                <el-radio-group v-model="configType" size="small">
+                  <el-radio-button label="sse">SSE</el-radio-button>
+                  <el-radio-button label="streamableHttp">StreamableHttp</el-radio-button>
+                </el-radio-group>
+              </div>
+              <div class="config-json-container">
+                <pre class="config-json">{{ formattedConfig }}</pre>
+                <el-button 
+                  type="primary" 
+                  size="small" 
+                  class="copy-button"
+                  @click="copyConfig"
+                  :loading="isCopying"
+                >
+                  <el-icon><DocumentCopy /></el-icon>
+                  {{ copyButtonText }}
+                </el-button>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -132,12 +138,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
 import AppNavbar from '../components/AppNavbar.vue'
+import { ElMessage } from 'element-plus'
 import { 
-  Tools, User, Connection, Monitor, Setting, Refresh 
+  Tools, User, Connection, Monitor, Document, DocumentCopy 
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -145,6 +152,9 @@ const authStore = useAuthStore()
 
 const isLoading = ref(false)
 const serverStatus = ref('运行中')
+const configType = ref('sse')
+const isCopying = ref(false)
+const copyButtonText = ref('复制配置')
 
 const stats = reactive({
   toolsCount: 0,
@@ -156,6 +166,38 @@ const serverInfo = reactive({
   url: import.meta.env.VITE_MILOMCP_API_URL || 'http://localhost:3000',
   uptime: '0分钟',
   version: 'v1.0.0'
+})
+
+const formattedConfig = computed(() => {
+  const baseUrl = serverInfo.url
+  const token = authStore.token
+  const appTitle = 'MiloMCP Studio'
+  
+  if (!token) {
+    return JSON.stringify({
+      mcpServers: {
+        [appTitle]: {
+          type: configType.value,
+          url: `${baseUrl}${configType.value === 'sse' ? '/sse' : '/mcp'}`,
+          headers: {
+            Authorization: 'Bearer <your-token-here>'
+          }
+        }
+      }
+    }, null, 2)
+  }
+
+  return JSON.stringify({
+    mcpServers: {
+      [appTitle]: {
+        type: configType.value,
+        url: `${baseUrl}${configType.value === 'sse' ? '/sse' : '/mcp'}`,
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  }, null, 2)
 })
 
 let refreshInterval = null
@@ -213,6 +255,31 @@ const refreshStats = async () => {
   }
 }
 
+const copyConfig = async () => {
+  isCopying.value = true
+  copyButtonText.value = '复制中...'
+  
+  try {
+    await navigator.clipboard.writeText(formattedConfig.value)
+    ElMessage.success('配置已复制到剪贴板')
+    copyButtonText.value = '已复制!'
+    
+    setTimeout(() => {
+      copyButtonText.value = '复制配置'
+    }, 2000)
+  } catch (error) {
+    console.error('Failed to copy config:', error)
+    ElMessage.error('复制失败，请手动选择并复制文本')
+    copyButtonText.value = '复制失败'
+    
+    setTimeout(() => {
+      copyButtonText.value = '复制配置'
+    }, 2000)
+  } finally {
+    isCopying.value = false
+  }
+}
+
 onMounted(async () => {
   await fetchStats()
   refreshInterval = setInterval(fetchStats, 30000)
@@ -227,39 +294,78 @@ onUnmounted(() => {
 
 <style scoped>
 .dashboard-layout {
-  margin-top: 60px;
-  min-height: calc(100vh - 60px);
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
 }
 
 .dashboard-main {
-  padding: 24px;
-  background: var(--el-bg-color-page);
+  padding: 32px;
+  background: var(--app-bg-color);
+  min-height: calc(100vh - 64px);
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+  padding: 40px 20px;
+  background: var(--welcome-bg-color);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+html.dark .welcome-section {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .welcome-section h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  color: var(--el-text-color-primary);
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 12px 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -1px;
 }
 
 .welcome-section p {
-  font-size: 16px;
+  font-size: 18px;
   color: var(--el-text-color-regular);
   margin: 0;
+  opacity: 0.8;
 }
 
 .stats-section {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
 }
 
 .stat-card {
-  height: 120px;
+  height: 140px;
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  position: relative;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }
 
 .stat-content {
@@ -317,7 +423,21 @@ onUnmounted(() => {
 }
 
 .content-section {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.content-section .el-card {
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.content-section .el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
 }
 
 .card-header {
@@ -357,19 +477,153 @@ onUnmounted(() => {
   font-weight: 600;
 }
 
-.action-buttons {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+.mcp-config-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-description {
+  margin: 0;
+  font-size: 14px;
+  color: var(--el-text-color-regular);
+}
+
+.config-options {
+  display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+.config-json-container {
+  position: relative;
+  background: var(--el-fill-color-lighter);
+  border: 1px solid var(--el-border-color-light);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.config-json {
+  margin: 0;
+  padding: 16px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--el-text-color-primary);
+  background: transparent;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.copy-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
 }
 
 @media (max-width: 768px) {
   .dashboard-main {
-    padding: 16px;
+    padding: 20px;
   }
-
-  .action-buttons {
-    grid-template-columns: 1fr;
+  
+  .welcome-section {
+    margin-bottom: 32px;
+    padding: 32px 20px;
+    border-radius: 16px;
+  }
+  
+  .welcome-section h2 {
+    font-size: 28px;
+  }
+  
+  .welcome-section p {
+    font-size: 16px;
+  }
+  
+  .stats-section {
+    margin-bottom: 32px;
+  }
+  
+  .stat-card {
+    margin-bottom: 20px;
+    height: 120px;
+  }
+  
+  .stat-content {
+    gap: 12px;
+  }
+  
+  .stat-icon {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .stat-number {
+    font-size: 20px;
+  }
+  
+  .content-section {
+    margin-bottom: 24px;
+  }
+  
+  .content-section .el-card {
+    margin-bottom: 20px;
+    border-radius: 12px;
+  }
+  
+  .card-header {
+    flex-direction: row;
+    gap: 8px;
+  }
+  
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 0;
+  }
+  
+  .info-item .label {
+    font-weight: 600;
+    font-size: 13px;
+  }
+  
+  .info-item .value {
+    font-size: 14px;
+  }
+  
+  .mcp-config-content {
+    gap: 20px;
+  }
+  
+  .config-json {
+    font-size: 11px;
+    padding: 16px;
+    border-radius: 8px;
+  }
+  
+  .copy-button {
+    position: static;
+    margin-top: 12px;
+    width: 100%;
+    height: 44px;
+    border-radius: 8px;
+  }
+  
+  .config-json-container {
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+  }
+  
+  .config-options {
+    justify-content: center;
+  }
+  
+  .config-description {
+    text-align: center;
+    font-size: 13px;
   }
 }
 </style>

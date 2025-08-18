@@ -1,26 +1,17 @@
 <template>
-  <div id="app" :class="themeClass">
+  <div id="app">
     <RouterView />
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { useAuthStore } from './stores/auth.js'
 import { useUIStore } from './stores/ui.js'
 
 const authStore = useAuthStore()
 const uiStore = useUIStore()
-
-// Compute theme class for Element Plus
-const themeClass = computed(() => {
-  const theme = uiStore.currentTheme
-  return {
-    'theme-dark': theme.name === '深色主题',
-    'theme-light': theme.name !== '深色主题'
-  }
-})
 
 onMounted(async () => {
   // Initialize UI store first
@@ -32,35 +23,9 @@ onMounted(async () => {
 </script>
 
 <style>
-/* Element Plus theme customization */
+/* Global styles are now more streamlined */
 :root {
-  --el-color-primary: #667eea;
-  --el-color-primary-light-3: #8aa1f0;
-  --el-color-primary-light-5: #a6bbf5;
-  --el-color-primary-light-7: #c2d5fa;
-  --el-color-primary-light-8: #d1e0fc;
-  --el-color-primary-light-9: #e0effe;
-  --el-color-primary-dark-2: #5a67d8;
   --el-border-radius-base: 8px;
-}
-
-/* Dark theme overrides */
-.theme-dark {
-  --el-color-primary: #9f7aea;
-  --el-color-primary-light-3: #b794f6;
-  --el-color-primary-light-5: #c6a7ff;
-  --el-color-primary-light-7: #d6bcfa;
-  --el-color-primary-light-8: #e9d8fd;
-  --el-color-primary-light-9: #faf5ff;
-  --el-color-primary-dark-2: #805ad5;
-  --el-bg-color: #1a202c;
-  --el-bg-color-page: #1a202c;
-  --el-text-color-primary: #f7fafc;
-  --el-text-color-regular: #a0aec0;
-  --el-border-color: #4a5568;
-  --el-fill-color-blank: #2d3748;
-  --el-fill-color-lighter: #2d3748;
-  --el-fill-color: #4a5568;
 }
 
 html, body {
@@ -115,5 +80,79 @@ html, body {
   align-items: center;
   font-weight: 600;
   font-size: 16px;
+}
+
+/* Global responsive improvements */
+@media (max-width: 768px) {
+  .el-dialog {
+    margin: 20px !important;
+    width: calc(100vw - 40px) !important;
+    max-width: 500px !important;
+  }
+  
+  .el-dialog__header {
+    padding: 16px;
+  }
+  
+  .el-dialog__body {
+    padding: 16px;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  
+  .el-dialog__footer {
+    padding: 12px 16px;
+  }
+  
+  .el-button {
+    font-size: 14px;
+    padding: 8px 15px;
+  }
+  
+  .el-input__inner {
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+  
+  .el-form-item__label {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  
+  .el-card {
+    border-radius: 12px;
+  }
+  
+  .el-card__header {
+    padding: 16px;
+  }
+  
+  .el-card__body {
+    padding: 16px;
+  }
+}
+
+/* Fix scrolling issues on mobile */
+@media (max-width: 768px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  
+  body {
+    overflow-x: hidden;
+  }
+  
+  .el-table {
+    font-size: 13px;
+  }
+  
+  .el-table th,
+  .el-table td {
+    padding: 8px;
+  }
+  
+  .el-table__cell {
+    font-size: 13px;
+  }
 }
 </style>

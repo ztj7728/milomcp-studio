@@ -399,13 +399,14 @@ onMounted(async () => {
 
 <style scoped>
 .users-layout {
-  margin-top: 60px;
-  min-height: calc(100vh - 60px);
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
 }
 
 .users-main {
-  padding: 24px;
-  background: var(--el-bg-color-page);
+  padding: 32px;
+  background: var(--app-bg-color);
+  min-height: calc(100vh - 64px);
 }
 
 .page-header {
@@ -436,6 +437,32 @@ onMounted(async () => {
 
 .stat-card {
   margin-bottom: 0;
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* Main card styling */
+.users-main .el-card {
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.users-main .el-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
 }
 
 .stat-content {
@@ -500,15 +527,72 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
+  .users-main {
+    padding: 16px;
+  }
+  
   .page-header {
     flex-direction: column;
     gap: 16px;
+    align-items: stretch;
+  }
+  
+  .page-header h2 {
+    font-size: 20px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .stats-row {
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    margin-bottom: 16px;
   }
   
   .card-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
+  }
+  
+  .card-header h3 {
+    font-size: 16px;
+  }
+  
+  .user-info {
+    gap: 6px;
+  }
+  
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .action-buttons .el-button {
+    width: 100%;
+    font-size: 12px;
+  }
+  
+  /* Hide some table columns on mobile */
+  :deep(.el-table .el-table__cell:nth-child(3)),
+  :deep(.el-table .el-table__header .el-table__cell:nth-child(3)) {
+    display: none;
+  }
+  
+  :deep(.el-table .el-table__cell:nth-child(4)),
+  :deep(.el-table .el-table__header .el-table__cell:nth-child(4)) {
+    display: none;
   }
 }
 </style>

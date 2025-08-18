@@ -302,13 +302,14 @@ onMounted(() => {
 
 <style scoped>
 .tools-layout {
-  margin-top: 60px;
-  min-height: calc(100vh - 60px);
+  margin-top: 64px;
+  min-height: calc(100vh - 64px);
 }
 
 .tools-main {
-  padding: 24px;
-  background: var(--el-bg-color-page);
+  padding: 32px;
+  background: var(--app-bg-color);
+  min-height: calc(100vh - 64px);
 }
 
 .page-header {
@@ -339,6 +340,17 @@ onMounted(() => {
 
 .stat-card {
   margin-bottom: 0;
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
 }
 
 .stat-content {
@@ -371,7 +383,19 @@ onMounted(() => {
 }
 
 .tool-card {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  border-radius: 16px;
+  border: none;
+  background: var(--card-bg-color);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.tool-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
 }
 
 .tool-header {
@@ -447,13 +471,73 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .tools-main {
+    padding: 16px;
+  }
+  
   .page-header {
     flex-direction: column;
     gap: 16px;
+    align-items: stretch;
+  }
+  
+  .page-header h2 {
+    font-size: 20px;
+  }
+  
+  .header-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .stats-row {
+    margin-bottom: 20px;
+  }
+  
+  .stat-card {
+    margin-bottom: 16px;
+  }
+  
+  .tool-card {
+    margin-bottom: 16px;
+  }
+  
+  .tool-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .tool-header h3 {
+    font-size: 14px;
+  }
+  
+  .tool-header p {
+    font-size: 13px;
+  }
+  
+  .tool-schema {
+    margin: 12px 0;
+  }
+  
+  .schema-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .param-tag {
+    font-size: 11px;
+    margin: 2px;
   }
   
   .tool-actions {
     flex-direction: column;
+    gap: 8px;
+  }
+  
+  .tool-actions .el-button {
+    width: 100%;
   }
 }
 </style>

@@ -1,157 +1,258 @@
 <template>
-  <el-header class="app-navbar">
-    <div class="navbar-left">
-      <h1 class="brand-title">MiloMCP Studio</h1>
-    </div>
-    <div class="navbar-nav">
-      <el-menu mode="horizontal" :default-active="$route.name" router class="navbar-menu">
-        <el-menu-item index="Dashboard">仪表板</el-menu-item>
-        <el-menu-item index="Tools">工具管理</el-menu-item>
-        <el-menu-item v-if="authStore.isAdmin" index="Users">用户管理</el-menu-item>
-        <el-menu-item index="Settings">设置</el-menu-item>
-      </el-menu>
-      <el-button type="primary" @click="handleLogout" size="small" class="logout-btn">
-        <el-icon><SwitchButton /></el-icon>
-        退出登录
+  <el-header class="app-navbar" :style="{ height: navbarHeight }">
+    <div class="navbar-container">
+      <div class="navbar-brand">
+        <h1 class="brand-title">MiloMCP Studio</h1>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="navbar-nav desktop-nav">
+        <router-link v-for="item in navigationItems" :key="item.index" :to="{ name: item.index }" class="nav-item">
+          <el-icon>
+            <component :is="item.icon" />
+          </el-icon>
+          <span>{{ item.label }}</span>
+        </router-link>
+        <el-button type="primary" @click="handleLogout" class="logout-btn" plain>
+          <el-icon>
+            <SwitchButton />
+          </el-icon>
+          <span>退出登录</span>
+        </el-button>
+      </nav>
+
+      <!-- Mobile Navigation Toggle -->
+      <el-button class="mobile-toggle" @click="isMobileMenuOpen = !isMobileMenuOpen" text circle size="large">
+        <el-icon size="20">
+          <component :is="isMobileMenuOpen ? Close : Menu" />
+        </el-icon>
       </el-button>
+    </div>
+
+    <!-- Mobile Navigation Menu -->
+    <div class="mobile-menu" :class="{ 'is-open': isMobileMenuOpen }">
+      <nav class="mobile-nav">
+        <router-link v-for="item in navigationItems" :key="item.index" :to="{ name: item.index }" class="mobile-nav-item" @click="closeMobileMenu">
+          <el-icon class="nav-icon">
+            <component :is="item.icon" />
+          </el-icon>
+          <span class="nav-text">{{ item.label }}</span>
+        </router-link>
+        <div class="mobile-logout-btn-wrapper">
+          <el-button type="danger" @click="handleLogout" class="mobile-logout-btn" size="large" plain>
+            <el-icon>
+              <SwitchButton />
+            </el-icon>
+            <span>退出登录</span>
+          </el-button>
+        </div>
+      </nav>
     </div>
   </el-header>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter, RouterLink } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-import { SwitchButton } from '@element-plus/icons-vue'
+import {
+  SwitchButton, Menu, Close, Monitor, Tools, User, Setting
+} from '@element-plus/icons-vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const isMobileMenuOpen = ref(false)
+
+const navigationItems = computed(() => {
+  const items = [
+    { index: 'Dashboard', label: '仪表板', icon: Monitor },
+    { index: 'Tools', label: '工具管理', icon: Tools },
+    { index: 'Settings', label: '设置', icon: Setting }
+  ]
+
+  if (authStore.isAdmin) {
+    items.splice(2, 0, { index: 'Users', label: '用户管理', icon: User })
+  }
+
+  return items
+})
+
+const navbarHeight = computed(() => {
+  return '64px'
+})
 
 const handleLogout = () => {
   authStore.logout()
   router.push({ name: 'Login' })
+  closeMobileMenu()
 }
+
+const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
+const handleResize = () => {
+  if (window.innerWidth > 768 && isMobileMenuOpen.value) {
+    isMobileMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
+/* Base Navbar Styles */
 .app-navbar {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  background: var(--el-bg-color);
+  background: var(--navbar-bg-color);
+  backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--el-border-color-lighter);
+  transition: background-color 0.3s;
+}
+
+.navbar-container {
+  height: 64px;
+  width: 100%;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  height: 60px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1001;
 }
 
-/* Dark mode box shadow */
-:deep(.theme-dark) .app-navbar {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-.navbar-left {
-  display: flex;
-  align-items: center;
-}
-
-.brand-title {
+.navbar-brand .brand-title {
   font-size: 20px;
   font-weight: 700;
-  color: var(--el-text-color-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--el-color-primary), var(--el-color-primary-light-3));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--el-text-color-primary);
 }
 
-.navbar-nav {
+/* Desktop Navigation */
+.desktop-nav {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
 }
 
-.navbar-menu {
-  border-bottom: none !important;
-  background: transparent !important;
-}
-
-/* Improve menu item styling */
-:deep(.navbar-menu .el-menu-item) {
-  border-bottom: none !important;
-  border-radius: 6px;
-  margin: 0 4px;
-  transition: all 0.3s ease;
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--el-text-color-regular);
   font-weight: 500;
+  transition: all 0.2s ease-in-out;
 }
 
-:deep(.navbar-menu .el-menu-item:hover) {
-  background-color: var(--el-color-primary-light-9) !important;
-  color: var(--el-color-primary) !important;
+.nav-item:hover {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
 }
 
-:deep(.navbar-menu .el-menu-item.is-active) {
-  background-color: var(--el-color-primary) !important;
-  color: white !important;
-  border-radius: 6px;
-}
-
-/* Dark mode menu styling */
-:deep(.theme-dark .navbar-menu .el-menu-item:hover) {
-  background-color: var(--el-color-primary-dark-2) !important;
-  color: var(--el-color-primary-light-3) !important;
-}
-
-:deep(.theme-dark .navbar-menu .el-menu-item.is-active) {
-  background-color: var(--el-color-primary) !important;
-  color: white !important;
-}
-
-:deep(.theme-dark .navbar-menu .el-menu-item) {
-  color: var(--el-text-color-primary) !important;
+.nav-item.router-link-exact-active {
+  background-color: var(--el-color-primary);
+  color: white;
 }
 
 .logout-btn {
-  white-space: nowrap;
-  border-radius: 6px;
+  margin-left: 16px;
+}
+
+/* Mobile Toggle */
+.mobile-toggle {
+  display: none;
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  background: inherit;
+  transform: translateY(-100%);
+  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.4s;
+  visibility: hidden;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-y: auto;
+  max-height: calc(100vh - 64px); /* Full height minus navbar */
+}
+
+.mobile-menu.is-open {
+  transform: translateY(0);
+  visibility: visible;
+}
+
+.mobile-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 16px 20px; /* Increased padding for better spacing */
+  gap: 12px; /* Increased gap */
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Align items to the start */
+  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--el-text-color-primary);
+  font-size: 16px;
   font-weight: 500;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
 }
 
-.logout-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.mobile-nav-item .nav-icon {
+  margin-right: 12px;
 }
 
+.mobile-nav-item:hover {
+  background-color: var(--el-color-primary-light-9);
+  color: var(--el-color-primary);
+}
+
+.mobile-nav-item.router-link-exact-active {
+  background-color: var(--el-color-primary);
+  color: white;
+}
+
+.mobile-logout-btn-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  padding: 0; /* Reset padding */
+  margin-top: 8px;
+}
+
+.mobile-logout-btn {
+  width: 100%;
+  justify-content: flex-start; /* Align button content to the start */
+}
+
+
+/* Responsive Breakpoints */
 @media (max-width: 768px) {
-  .app-navbar {
-    flex-direction: column;
-    height: auto;
-    padding: 10px;
+  .desktop-nav {
+    display: none;
   }
-  
-  .navbar-nav {
-    margin: 10px 0;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-  
-  .navbar-menu {
-    margin: 10px 0;
-    width: 100%;
-    justify-content: center;
-  }
-  
-  :deep(.navbar-menu .el-menu-item) {
-    margin: 2px 0;
-    justify-content: center;
+
+  .mobile-toggle {
+    display: inline-flex;
   }
 }
 </style>

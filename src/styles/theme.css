@@ -1,0 +1,78 @@
+/* src/styles/theme.css */
+
+/* 
+  This file centralizes the theme variables for the application.
+  It uses Element Plus's CSS variables for seamless integration.
+*/
+
+/* Light Theme (Default) */
+html {
+  --app-bg-color: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  --navbar-bg-color: rgba(255, 255, 255, 0.8);
+  --card-bg-color: rgba(255, 255, 255, 0.9);
+  --welcome-bg-color: var(--el-bg-color-overlay);
+
+  /* Override Element Plus primary colors */
+  --el-color-primary: #667eea;
+  --el-color-primary-light-3: #8aa1f0;
+  --el-color-primary-light-5: #a6bbf5;
+  --el-color-primary-light-7: #c2d5fa;
+  --el-color-primary-light-8: #d1e0fc;
+  --el-color-primary-light-9: #e0effe;
+  --el-color-primary-dark-2: #5a67d8;
+}
+
+/* Dark Theme */
+html.dark {
+  /* Base colors */
+  --el-bg-color: #1a202c;
+  --el-bg-color-page: #1a202c;
+  --el-bg-color-overlay: #2d3748;
+  --el-border-color: #4a5568;
+  --el-border-color-light: #4a5568;
+  --el-border-color-lighter: #2d3748;
+  --el-border-color-extra-light: #2d3748;
+  --el-fill-color: #4a5568;
+  --el-fill-color-light: #4a5568;
+  --el-fill-color-lighter: #2d3748;
+  --el-fill-color-blank: #1a202c;
+
+  /* App-specific theme variables */
+  --app-bg-color: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+  --navbar-bg-color: rgba(20, 20, 20, 0.8);
+  --card-bg-color: rgba(45, 55, 72, 0.9);
+  --welcome-bg-color: var(--el-bg-color-overlay);
+
+  /* Override Element Plus primary colors for dark mode */
+  --el-color-primary: #9f7aea;
+  --el-color-primary-light-3: #b794f6;
+  --el-color-primary-light-5: #c6a7ff;
+  --el-color-primary-light-7: #d6bcfa;
+  --el-color-primary-light-8: #e9d8fd;
+  --el-color-primary-light-9: #faf5ff;
+  --el-color-primary-dark-2: #805ad5;
+
+  /* Text colors for dark mode */
+  --el-text-color-primary: #f7fafc;
+  --el-text-color-regular: #a0aec0;
+  --el-text-color-secondary: #718096;
+  --el-text-color-placeholder: #4a5568;
+}
+
+/* Explicit component overrides for dark mode for better consistency */
+html.dark {
+  /* Table styles */
+  --el-table-tr-bg-color: #2d3748;
+  --el-table-header-bg-color: #1a202c;
+  --el-table-border-color: #4a5568;
+  --el-table-row-hover-bg-color: #4a5568;
+
+  /* Input styles */
+  --el-input-bg-color: #2d3748;
+  --el-input-border-color: #4a5568;
+  --el-input-hover-border-color: var(--el-color-primary);
+
+  /* Button styles */
+  --el-button-text-color: var(--el-text-color-primary);
+}
+
