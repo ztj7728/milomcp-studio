@@ -1,0 +1,10 @@
+.env
+.gitignore
+docker-compose.yml
+Dockerfile
+node_modules/
+.claude/
+package-lock.json
+CLAUDE.md
+GEMINI.md
+TOOL_DEVELOPMENT_GUIDE.md

@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    image: zhoutijie/milomcp-studio:latest
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "${MILOMCP_STUDIO_PORT}:4173"
+    #volumes:
+    #  - none:none

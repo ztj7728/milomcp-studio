@@ -1,0 +1,7 @@
+:4173 {
+        # Set this path to your site's directory.
+        root * /opt/app
+
+        # Enable the static file server.
+        file_server
+}
