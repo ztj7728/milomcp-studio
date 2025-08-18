@@ -1,108 +1,103 @@
 <template>
   <div>
-    <AppNavbar />
-    <el-container class="users-layout">
-    <el-main class="users-main">
-        <div class="page-header">
-          <div>
-            <h2>用户管理</h2>
-            <p>管理系统用户和权限设置</p>
+    <div class="page-header">
+      <div>
+        <h2>用户管理</h2>
+        <p>管理系统用户和权限设置</p>
+      </div>
+      <div class="header-actions">
+        <el-button @click="showCreateModal = true" type="primary">
+          <el-icon><Plus /></el-icon>
+          添加用户
+        </el-button>
+        <el-button @click="refreshUsers" :loading="isLoading" type="default">
+          <el-icon><Refresh /></el-icon>
+          刷新
+        </el-button>
+      </div>
+    </div>
+
+    <el-row :gutter="20" class="stats-row">
+      <el-col :xs="24" :sm="8">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">👥</div>
+            <div>
+              <div class="stat-number">{{ users.length }}</div>
+              <div class="stat-label">总用户数</div>
+            </div>
           </div>
-          <div class="header-actions">
-            <el-button @click="showCreateModal = true" type="primary">
-              <el-icon><Plus /></el-icon>
-              添加用户
-            </el-button>
-            <el-button @click="refreshUsers" :loading="isLoading" type="default">
-              <el-icon><Refresh /></el-icon>
-              刷新
-            </el-button>
-          </div>
+        </el-card>
+      </el-col>
+    </el-row>
+
+    <el-card>
+      <template #header>
+        <div class="card-header">
+          <h3>用户列表</h3>
+          <el-input
+            v-model="searchQuery"
+            placeholder="搜索用户..."
+            style="width: 300px"
+            clearable
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
         </div>
+      </template>
 
-        <el-row :gutter="20" class="stats-row">
-          <el-col :xs="24" :sm="8">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon">👥</div>
-                <div>
-                  <div class="stat-number">{{ users.length }}</div>
-                  <div class="stat-label">总用户数</div>
-                </div>
-              </div>
-            </el-card>
-          </el-col>
-        </el-row>
+      <el-empty v-if="filteredUsers.length === 0" description="暂无用户">
+        <el-button @click="showCreateModal = true" type="primary">添加用户</el-button>
+      </el-empty>
 
-        <el-card>
-          <template #header>
-            <div class="card-header">
-              <h3>用户列表</h3>
-              <el-input
-                v-model="searchQuery"
-                placeholder="搜索用户..."
-                style="width: 300px"
-                clearable
-              >
-                <template #prefix>
-                  <el-icon><Search /></el-icon>
-                </template>
-              </el-input>
+      <el-table v-else :data="filteredUsers" stripe>
+        <el-table-column label="用户名" prop="name" min-width="150">
+          <template #default="{ row }">
+            <div class="user-info">
+              <el-avatar :size="32" class="user-avatar">
+                {{ (row.name || row.id).charAt(0).toUpperCase() }}
+              </el-avatar>
+              <span>{{ row.name || row.id }}</span>
             </div>
           </template>
-
-          <el-empty v-if="filteredUsers.length === 0" description="暂无用户">
-            <el-button @click="showCreateModal = true" type="primary">添加用户</el-button>
-          </el-empty>
-
-          <el-table v-else :data="filteredUsers" stripe>
-            <el-table-column label="用户名" prop="name" min-width="150">
-              <template #default="{ row }">
-                <div class="user-info">
-                  <el-avatar :size="32" class="user-avatar">
-                    {{ (row.name || row.id).charAt(0).toUpperCase() }}
-                  </el-avatar>
-                  <span>{{ row.name || row.id }}</span>
-                </div>
-              </template>
-            </el-table-column>
-            <el-table-column label="ID" prop="id" min-width="120" />
-            <el-table-column label="Token" min-width="120">
-              <template #default="{ row }">
-                <el-button @click="copyToken(row.token)" size="small" type="primary" link>
-                  <el-icon><DocumentCopy /></el-icon>
-                  复制
-                </el-button>
-              </template>
-            </el-table-column>
-            <el-table-column label="创建时间" min-width="140">
-              <template #default="{ row }">
-                {{ formatDate(row.createdAt) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="过期时间" min-width="140">
-              <template #default="{ row }">
-                {{ row.expiresAt ? formatDate(row.expiresAt) : '永久' }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" min-width="160" fixed="right">
-              <template #default="{ row }">
-                <div class="action-buttons">
-                  <el-button @click="editUser(row)" size="small" type="primary" link>
-                    <el-icon><Edit /></el-icon>
-                    编辑
-                  </el-button>
-                  <el-button @click="deleteUser(row)" size="small" type="danger" link>
-                    <el-icon><Delete /></el-icon>
-                    删除
-                  </el-button>
-                </div>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
-      </el-main>
-    </el-container>
+        </el-table-column>
+        <el-table-column label="ID" prop="id" min-width="120" />
+        <el-table-column label="Token" min-width="120">
+          <template #default="{ row }">
+            <el-button @click="copyToken(row.token)" size="small" type="primary" link>
+              <el-icon><DocumentCopy /></el-icon>
+              复制
+            </el-button>
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" min-width="140">
+          <template #default="{ row }">
+            {{ formatDate(row.createdAt) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="过期时间" min-width="140">
+          <template #default="{ row }">
+            {{ row.expiresAt ? formatDate(row.expiresAt) : '永久' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" min-width="160" fixed="right">
+          <template #default="{ row }">
+            <div class="action-buttons">
+              <el-button @click="editUser(row)" size="small" type="primary" link>
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button @click="deleteUser(row)" size="small" type="danger" link>
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
     <!-- Create/Edit User Modal -->
     <el-dialog
@@ -155,8 +150,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-import AppNavbar from '../components/AppNavbar.vue'
-import Swal from 'sweetalert2'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Refresh, Search, DocumentCopy, Edit, Delete } from '@element-plus/icons-vue'
 
@@ -398,17 +391,6 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.users-layout {
-  margin-top: 64px;
-  min-height: calc(100vh - 64px);
-}
-
-.users-main {
-  padding: 32px;
-  background: var(--app-bg-color);
-  min-height: calc(100vh - 64px);
-}
-
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -527,10 +509,6 @@ onMounted(async () => {
 }
 
 @media (max-width: 768px) {
-  .users-main {
-    padding: 16px;
-  }
-  
   .page-header {
     flex-direction: column;
     gap: 16px;

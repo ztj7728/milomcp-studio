@@ -1,95 +1,90 @@
 <template>
   <div>
-    <AppNavbar />
-    <el-container class="tools-layout">
-    <el-main class="tools-main">
-        <div class="page-header">
-          <div>
-            <h2>工具管理</h2>
-            <p>管理和监控 MiloMCP 系统工具</p>
+    <div class="page-header">
+      <div>
+        <h2>工具管理</h2>
+        <p>管理和监控 MiloMCP 系统工具</p>
+      </div>
+      <div class="header-actions">
+        <el-button @click="refreshTools" :loading="isLoading" type="default">
+          <el-icon><Refresh /></el-icon>
+          刷新工具
+        </el-button>
+        <el-button v-if="authStore.isAdmin" @click="reloadAllTools" :loading="isLoading" type="primary">
+          <el-icon><RefreshRight /></el-icon>
+          重载所有工具
+        </el-button>
+      </div>
+    </div>
+
+    <el-row :gutter="20" class="stats-row">
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">🛠️</div>
+            <div>
+              <div class="stat-number">{{ tools.length }}</div>
+              <div class="stat-label">可用工具</div>
+            </div>
           </div>
-          <div class="header-actions">
-            <el-button @click="refreshTools" :loading="isLoading" type="default">
-              <el-icon><Refresh /></el-icon>
-              刷新工具
-            </el-button>
-            <el-button v-if="authStore.isAdmin" @click="reloadAllTools" :loading="isLoading" type="primary">
-              <el-icon><RefreshRight /></el-icon>
-              重载所有工具
-            </el-button>
+        </el-card>
+      </el-col>
+      <el-col :xs="24" :sm="12" :lg="6">
+        <el-card class="stat-card">
+          <div class="stat-content">
+            <div class="stat-icon">📋</div>
+            <div>
+              <div class="stat-number">{{ totalParams }}</div>
+              <div class="stat-label">参数总数</div>
+            </div>
           </div>
-        </div>
+        </el-card>
+      </el-col>
+    </el-row>
 
-        <el-row :gutter="20" class="stats-row">
-          <el-col :xs="24" :sm="12" :lg="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon">🛠️</div>
-                <div>
-                  <div class="stat-number">{{ tools.length }}</div>
-                  <div class="stat-label">可用工具</div>
-                </div>
+    <el-row :gutter="20">
+      <el-col v-for="tool in tools" :key="tool.name" :xs="24" :sm="12" :lg="8">
+        <el-card class="tool-card">
+          <template #header>
+            <div class="tool-header">
+              <div>
+                <h3>{{ tool.name }}</h3>
+                <p>{{ tool.description }}</p>
               </div>
-            </el-card>
-          </el-col>
-          <el-col :xs="24" :sm="12" :lg="6">
-            <el-card class="stat-card">
-              <div class="stat-content">
-                <div class="stat-icon">📋</div>
-                <div>
-                  <div class="stat-number">{{ totalParams }}</div>
-                  <div class="stat-label">参数总数</div>
-                </div>
+              <el-tag type="success">可用</el-tag>
+            </div>
+          </template>
+
+          <div class="tool-schema">
+            <h4>输入参数</h4>
+            <div class="schema-list">
+              <el-tag
+                v-for="(param, key) in tool.inputSchema?.properties"
+                :key="key"
+                size="small"
+                class="param-tag"
+              >
+                {{ key }} ({{ param.type }})
+                <el-icon v-if="tool.inputSchema?.required?.includes(key)" color="#f56c6c"><StarFilled /></el-icon>
+              </el-tag>
+              <div v-if="!tool.inputSchema?.properties || Object.keys(tool.inputSchema.properties).length === 0" class="empty-schema">
+                无参数
               </div>
-            </el-card>
-          </el-col>
-        </el-row>
+            </div>
+          </div>
 
-        <el-row :gutter="20">
-          <el-col v-for="tool in tools" :key="tool.name" :xs="24" :sm="12" :lg="8">
-            <el-card class="tool-card">
-              <template #header>
-                <div class="tool-header">
-                  <div>
-                    <h3>{{ tool.name }}</h3>
-                    <p>{{ tool.description }}</p>
-                  </div>
-                  <el-tag type="success">可用</el-tag>
-                </div>
-              </template>
+          <template #footer>
+            <div class="tool-actions">
+              <el-button @click="testTool(tool)" size="small" type="primary">测试工具</el-button>
+            </div>
+          </template>
+        </el-card>
+      </el-col>
+    </el-row>
 
-              <div class="tool-schema">
-                <h4>输入参数</h4>
-                <div class="schema-list">
-                  <el-tag
-                    v-for="(param, key) in tool.inputSchema?.properties"
-                    :key="key"
-                    size="small"
-                    class="param-tag"
-                  >
-                    {{ key }} ({{ param.type }})
-                    <el-icon v-if="tool.inputSchema?.required?.includes(key)" color="#f56c6c"><StarFilled /></el-icon>
-                  </el-tag>
-                  <div v-if="!tool.inputSchema?.properties || Object.keys(tool.inputSchema.properties).length === 0" class="empty-schema">
-                    无参数
-                  </div>
-                </div>
-              </div>
-
-              <template #footer>
-                <div class="tool-actions">
-                  <el-button @click="testTool(tool)" size="small" type="primary">测试工具</el-button>
-                </div>
-              </template>
-            </el-card>
-          </el-col>
-        </el-row>
-
-        <el-empty v-if="tools.length === 0" description="暂无工具">
-          <el-button @click="refreshTools" type="primary">刷新工具列表</el-button>
-        </el-empty>
-      </el-main>
-    </el-container>
+    <el-empty v-if="tools.length === 0" description="暂无工具">
+      <el-button @click="refreshTools" type="primary">刷新工具列表</el-button>
+    </el-empty>
 
     <!-- Tool Test Modal -->
     <el-dialog
@@ -163,7 +158,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
-import AppNavbar from '../components/AppNavbar.vue'
 import { ElMessage } from 'element-plus'
 import { Refresh, RefreshRight, StarFilled } from '@element-plus/icons-vue'
 
@@ -301,17 +295,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.tools-layout {
-  margin-top: 64px;
-  min-height: calc(100vh - 64px);
-}
-
-.tools-main {
-  padding: 32px;
-  background: var(--app-bg-color);
-  min-height: calc(100vh - 64px);
-}
-
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -471,10 +454,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .tools-main {
-    padding: 16px;
-  }
-  
   .page-header {
     flex-direction: column;
     gap: 16px;
