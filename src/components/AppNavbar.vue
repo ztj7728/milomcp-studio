@@ -6,20 +6,22 @@
       </div>
 
       <!-- Desktop Navigation -->
-      <nav class="navbar-nav desktop-nav">
-        <router-link v-for="item in navigationItems" :key="item.index" :to="{ name: item.index }" class="nav-item">
-          <el-icon>
-            <component :is="item.icon" />
-          </el-icon>
-          <span>{{ item.label }}</span>
-        </router-link>
+      <div class="desktop-nav-container">
+        <nav class="navbar-nav desktop-nav">
+          <router-link v-for="item in navigationItems" :key="item.index" :to="{ name: item.index }" class="nav-item">
+            <el-icon>
+              <component :is="item.icon" />
+            </el-icon>
+            <span>{{ item.label }}</span>
+          </router-link>
+        </nav>
         <el-button type="primary" @click="handleLogout" class="logout-btn" plain>
           <el-icon>
             <SwitchButton />
           </el-icon>
           <span>退出登录</span>
         </el-button>
-      </nav>
+      </div>
 
       <!-- Mobile Navigation Toggle -->
       <el-button class="mobile-toggle" @click="isMobileMenuOpen = !isMobileMenuOpen" text circle size="large">
@@ -124,7 +126,9 @@ onUnmounted(() => {
 .navbar-container {
   height: 64px;
   width: 100%;
-  padding: 0 20px;
+  max-width: 1280px; /* Max width for content */
+  margin: 0 auto; /* Center the container */
+  padding: 0 24px; /* Consistent padding */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -140,6 +144,12 @@ onUnmounted(() => {
 }
 
 /* Desktop Navigation */
+.desktop-nav-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
 .desktop-nav {
   display: flex;
   align-items: center;
@@ -168,10 +178,6 @@ onUnmounted(() => {
   color: white;
 }
 
-.logout-btn {
-  margin-left: 16px;
-}
-
 /* Mobile Toggle */
 .mobile-toggle {
   display: none;
@@ -183,13 +189,13 @@ onUnmounted(() => {
   top: 64px;
   left: 0;
   right: 0;
-  background: inherit;
+  background: var(--navbar-bg-solid-color); /* Solid background */
   transform: translateY(-100%);
   transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), visibility 0.4s;
   visibility: hidden;
-  overflow-x: hidden; /* Prevent horizontal scroll */
+  overflow-x: hidden;
   overflow-y: auto;
-  max-height: calc(100vh - 64px); /* Full height minus navbar */
+  max-height: calc(100vh - 64px);
 }
 
 .mobile-menu.is-open {
@@ -201,14 +207,14 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 16px 20px; /* Increased padding for better spacing */
-  gap: 12px; /* Increased gap */
+  padding: 16px;
+  gap: 12px;
 }
 
 .mobile-nav-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start; /* Align items to the start */
+  justify-content: flex-start;
   width: 100%;
   padding: 16px;
   border-radius: 8px;
@@ -235,25 +241,28 @@ onUnmounted(() => {
 
 .mobile-logout-btn-wrapper {
   display: flex;
-  justify-content: flex-start;
-  padding: 0; /* Reset padding */
+  justify-content: center; /* Center the button */
+  padding: 16px 0 0;
   margin-top: 8px;
+  border-top: 1px solid var(--el-border-color-lighter);
 }
 
 .mobile-logout-btn {
   width: 100%;
-  justify-content: flex-start; /* Align button content to the start */
 }
-
 
 /* Responsive Breakpoints */
 @media (max-width: 768px) {
-  .desktop-nav {
+  .desktop-nav-container {
     display: none;
   }
 
   .mobile-toggle {
     display: inline-flex;
+  }
+
+  .navbar-container {
+    padding: 0 16px; /* Adjust padding for mobile */
   }
 }
 </style>
