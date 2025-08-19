@@ -3,5 +3,8 @@
         root * /opt/app
 
         # Enable the static file server.
+        # Fallback for SPA routing
+        try_files {path} /index.html
+
         file_server
 }

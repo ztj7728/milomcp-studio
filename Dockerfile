@@ -29,3 +29,13 @@ COPY docker_build/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /opt/app/dist /opt/app
 
 # Caddy 镜像会自动暴露 4173 端口并启动 Caddy 服务，我们无需额外操作。
+
+# 复制 entrypoint 脚本并赋予执行权限
+COPY docker_build/entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# 设置 entrypoint
+ENTRYPOINT ["entrypoint.sh"]
+
+# 设置默认命令，这个命令会被传递给 entrypoint.sh
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

@@ -476,7 +476,12 @@ export class MCPClient {
 }
 
 // Default client instance (can be configured globally)
-export const defaultClient = new MCPClient(import.meta.env.VITE_MILOMCP_API_URL || 'http://localhost:3000')
+// 优先从运行时配置（window.runtimeConfig）中读取 API URL，
+// 这使得 Docker 可以在运行时注入配置。
+// 如果运行时配置不存在，则回退到 Vite 的构建时环境变量，
+// 以此来兼容 `npm run dev` 开发模式。
+const runtimeApiUrl = window.runtimeConfig?.VITE_MILOMCP_API_URL || import.meta.env.VITE_MILOMCP_API_URL || 'http://localhost:3000';
+export const defaultClient = new MCPClient(runtimeApiUrl);
 
 // Utility functions for common operations
 export const mcpApi = {
@@ -490,7 +495,7 @@ export const mcpApi = {
   /**
    * Quick health check
    */
-  async ping(baseURL = import.meta.env.VITE_MILOMCP_API_URL || 'http://localhost:3000') {
+  async ping(baseURL = runtimeApiUrl) {
     const client = new MCPClient(baseURL)
     try {
       await client.getHealth()

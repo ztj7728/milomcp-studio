@@ -140,6 +140,7 @@ import { ElMessage } from 'element-plus'
 import {
   Tools, User, Connection, Monitor, Document, DocumentCopy
 } from '@element-plus/icons-vue'
+import { defaultClient } from '../api/client.js'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -157,7 +158,7 @@ const stats = reactive({
 })
 
 const serverInfo = reactive({
-  url: import.meta.env.VITE_MILOMCP_API_URL || 'http://localhost:3000',
+  url: defaultClient.baseURL,
   uptime: '0分钟',
   version: 'v1.0.0'
 })
@@ -198,8 +199,6 @@ let refreshInterval = null
 
 const fetchStats = async () => {
   try {
-    const { defaultClient } = await import('../api/client.js')
-    
     const health = await defaultClient.getHealth()
     
     if (health) {
